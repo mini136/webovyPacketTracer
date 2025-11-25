@@ -1,0 +1,7 @@
+FROM mongo:4.4
+
+# Expose MongoDB na portu 30111
+EXPOSE 30111
+
+# Spustit MongoDB na vlastním portu
+CMD ["mongod", "--port", "30111"]

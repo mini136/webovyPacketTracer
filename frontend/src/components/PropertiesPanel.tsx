@@ -1,0 +1,1733 @@
+import { useNetworkStore } from '../store/networkStore';
+import { useState } from 'react';
+import CLITerminal from './CLITerminal';
+
+export default function PropertiesPanel() {
+  const { selectedNode, updateNode, removeNode } = useNetworkStore();
+  const [editingInterface, setEditingInterface] = useState<number | null>(null);
+  const [showCLI, setShowCLI] = useState(false);
+  const [ipv4, setIpv4] = useState('');
+  const [subnet, setSubnet] = useState('');
+  const [ipv6, setIpv6] = useState('');
+  const [gateway, setGateway] = useState('');
+  
+  // Routing Table state
+  const [showAddRoute, setShowAddRoute] = useState(false);
+  const [routeNetwork, setRouteNetwork] = useState('');
+  const [routeMask, setRouteMask] = useState('');
+  const [routeNextHop, setRouteNextHop] = useState('');
+  const [routeMetric, setRouteMetric] = useState('1');
+
+  // DHCP state
+  const [showAddDhcp, setShowAddDhcp] = useState(false);
+  const [dhcpName, setDhcpName] = useState('');
+  const [dhcpNetwork, setDhcpNetwork] = useState('');
+  const [dhcpMask, setDhcpMask] = useState('');
+  const [dhcpRouter, setDhcpRouter] = useState('');
+  const [dhcpDns, setDhcpDns] = useState('');
+
+  // DNS state
+  const [showAddDns, setShowAddDns] = useState(false);
+  const [dnsHostname, setDnsHostname] = useState('');
+  const [dnsIpAddress, setDnsIpAddress] = useState('');
+  const [dnsType, setDnsType] = useState<'A' | 'AAAA' | 'CNAME'>('A');
+
+  // VLAN state (for switches)
+  const [showAddVlan, setShowAddVlan] = useState(false);
+  const [vlanId, setVlanId] = useState('');
+  const [vlanName, setVlanName] = useState('');
+  const [editingPort, setEditingPort] = useState<string | null>(null);
+  const [portVlan, setPortVlan] = useState('1');
+  const [portMode, setPortMode] = useState<'access' | 'trunk'>('access');
+
+  if (!selectedNode) {
+    return (
+      <div
+        style={{
+          width: '20vw',
+          minWidth: '300px',
+          maxWidth: '400px',
+          background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
+          padding: '17px',
+          height: '100vh',
+          borderLeft: '1px solid #e2e8f0',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginTop: '70px' }}>
+          <div style={{ fontSize: '45px', marginBottom: '11px', opacity: 0.3 }}>
+            🔍
+          </div>
+          <h3 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#334155' }}>
+            Vlastnosti Zařízení
+          </h3>
+          <p style={{ color: '#64748b', fontSize: '10px', lineHeight: '1.5' }}>
+            Vyber zařízení na canvasu pro zobrazení a úpravu vlastností
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateNode(selectedNode.id, { label: e.target.value });
+  };
+
+  const handleDelete = () => {
+    if (confirm(`Opravdu smazat ${selectedNode.data.label}?`)) {
+      removeNode(selectedNode.id);
+    }
+  };
+
+  const handleAddInterface = () => {
+    const deviceType = selectedNode.data.type;
+    let interfaceName = 'Eth0';
+    
+    if (deviceType === 'router') {
+      const count = selectedNode.data.interfaces.length;
+      interfaceName = `Gig0/${count}`;
+    } else if (deviceType === 'switch') {
+      const count = selectedNode.data.interfaces.length;
+      interfaceName = `Fa0/${count + 1}`;
+    } else if (deviceType === 'pc' || deviceType === 'server') {
+      interfaceName = `Eth${selectedNode.data.interfaces.length}`;
+    }
+
+    const newInterfaces = [
+      ...selectedNode.data.interfaces,
+      {
+        name: interfaceName,
+        ipAddress: '',
+        subnetMask: '',
+        ipv6Address: '',
+        gateway: '',
+      }
+    ];
+
+    updateNode(selectedNode.id, { interfaces: newInterfaces });
+  };
+
+  const handleSaveInterface = (index: number) => {
+    const newInterfaces = [...selectedNode.data.interfaces];
+    newInterfaces[index] = {
+      ...newInterfaces[index],
+      ipAddress: ipv4,
+      subnetMask: subnet,
+      ipv6Address: ipv6,
+      gateway: gateway,
+    };
+
+    updateNode(selectedNode.id, { interfaces: newInterfaces });
+    setEditingInterface(null);
+    setIpv4('');
+    setSubnet('');
+    setIpv6('');
+    setGateway('');
+  };
+
+  const handleEditInterface = (index: number) => {
+    const iface = selectedNode.data.interfaces[index];
+    setEditingInterface(index);
+    setIpv4(iface.ipAddress || '');
+    setSubnet(iface.subnetMask || '');
+    setIpv6(iface.ipv6Address || '');
+    setGateway(iface.gateway || '');
+  };
+
+  const handleDeleteInterface = (index: number) => {
+    const newInterfaces = selectedNode.data.interfaces.filter((_, i) => i !== index);
+    updateNode(selectedNode.id, { interfaces: newInterfaces });
+  };
+
+  const handleAddRoute = () => {
+    if (!routeNetwork || !routeMask || !routeNextHop) {
+      alert('Vyplň všechna povinná pole!');
+      return;
+    }
+
+    const newRoutes = [
+      ...(selectedNode.data.routingTable || []),
+      {
+        network: routeNetwork,
+        mask: routeMask,
+        nextHop: routeNextHop,
+        metric: parseInt(routeMetric) || 1,
+        protocol: 'static' as const,
+      }
+    ];
+
+    updateNode(selectedNode.id, { routingTable: newRoutes });
+    setRouteNetwork('');
+    setRouteMask('');
+    setRouteNextHop('');
+    setRouteMetric('1');
+    setShowAddRoute(false);
+  };
+
+  const handleDeleteRoute = (index: number) => {
+    const newRoutes = (selectedNode.data.routingTable || []).filter((_, i) => i !== index);
+    updateNode(selectedNode.id, { routingTable: newRoutes });
+  };
+
+  const handleAddDhcpPool = () => {
+    if (!dhcpName || !dhcpNetwork || !dhcpMask) {
+      alert('Vyplň povinná pole (Name, Network, Mask)!');
+      return;
+    }
+
+    const newPools = [
+      ...(selectedNode.data.dhcpPools || []),
+      {
+        name: dhcpName,
+        network: dhcpNetwork,
+        mask: dhcpMask,
+        defaultRouter: dhcpRouter,
+        dnsServer: dhcpDns,
+        leaseTime: 86400, // 24 hours
+      }
+    ];
+
+    updateNode(selectedNode.id, { dhcpPools: newPools, isDhcpServer: true });
+    setDhcpName('');
+    setDhcpNetwork('');
+    setDhcpMask('');
+    setDhcpRouter('');
+    setDhcpDns('');
+    setShowAddDhcp(false);
+  };
+
+  const handleDeleteDhcpPool = (index: number) => {
+    const newPools = (selectedNode.data.dhcpPools || []).filter((_, i) => i !== index);
+    updateNode(selectedNode.id, { dhcpPools: newPools, isDhcpServer: newPools.length > 0 });
+  };
+
+  const handleAddDnsRecord = () => {
+    if (!dnsHostname || !dnsIpAddress) {
+      alert('Vyplň hostname a IP adresu!');
+      return;
+    }
+
+    const newRecords = [
+      ...(selectedNode.data.dnsRecords || []),
+      {
+        hostname: dnsHostname,
+        ipAddress: dnsIpAddress,
+        type: dnsType,
+      }
+    ];
+
+    updateNode(selectedNode.id, { dnsRecords: newRecords, isDnsServer: true });
+    setDnsHostname('');
+    setDnsIpAddress('');
+    setDnsType('A');
+    setShowAddDns(false);
+  };
+
+  const handleDeleteDnsRecord = (index: number) => {
+    const newRecords = (selectedNode.data.dnsRecords || []).filter((_, i) => i !== index);
+    updateNode(selectedNode.id, { dnsRecords: newRecords, isDnsServer: newRecords.length > 0 });
+  };
+
+  const handleAddVlan = () => {
+    const id = parseInt(vlanId);
+    if (!id || id < 1 || id > 4094) {
+      alert('VLAN ID musí být mezi 1 a 4094');
+      return;
+    }
+    
+    const vlans = selectedNode.data.vlans || [];
+    if (vlans.find(v => v.id === id)) {
+      alert(`VLAN ${id} již existuje`);
+      return;
+    }
+    
+    const newVlans = [...vlans, { id, name: vlanName || `VLAN${id}`, ports: [] }];
+    updateNode(selectedNode.id, { vlans: newVlans });
+    setVlanId('');
+    setVlanName('');
+    setShowAddVlan(false);
+  };
+
+  const handleDeleteVlan = (vlanIdToDelete: number) => {
+    if (vlanIdToDelete === 1) {
+      alert('Nelze smazat výchozí VLAN 1');
+      return;
+    }
+    const newVlans = (selectedNode.data.vlans || []).filter(v => v.id !== vlanIdToDelete);
+    updateNode(selectedNode.id, { vlans: newVlans });
+  };
+
+  const handleEditPort = (portName: string) => {
+    setEditingPort(portName);
+    const iface = selectedNode.data.interfaces.find(i => i.name === portName);
+    setPortVlan((iface?.vlanId || 1).toString());
+    setPortMode('access');
+  };
+
+  const handleSavePortConfig = () => {
+    if (!editingPort) return;
+    
+    const vlanIdNum = parseInt(portVlan);
+    const vlans = selectedNode.data.vlans || [];
+    
+    // Remove port from all VLANs first
+    const updatedVlans = vlans.map(vlan => ({
+      ...vlan,
+      ports: vlan.ports.filter(p => p !== editingPort)
+    }));
+    
+    // Add port to selected VLAN
+    const targetVlan = updatedVlans.find(v => v.id === vlanIdNum);
+    if (targetVlan) {
+      targetVlan.ports.push(editingPort);
+    }
+    
+    // Update interface with VLAN info
+    const interfaces = selectedNode.data.interfaces.map(iface => {
+      if (iface.name === editingPort) {
+        return { ...iface, vlanId: vlanIdNum };
+      }
+      return iface;
+    });
+    
+    updateNode(selectedNode.id, { vlans: updatedVlans, interfaces });
+    setEditingPort(null);
+  };
+
+  const deviceTypeLabels: Record<string, string> = {
+    router: '⚡ Router',
+    switch: '🔀 Switch',
+    pc: '💻 PC',
+    server: '🖥️ Server',
+    hub: '⭐ Hub',
+  };
+
+  return (
+    <div
+      style={{
+        width: '20vw',
+        minWidth: '300px',
+        maxWidth: '400px',
+        background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
+        padding: '17px',
+        height: '100vh',
+        borderLeft: '1px solid #e2e8f0',
+        overflowY: 'auto',
+      }}
+    >
+      <div style={{ marginBottom: '17px' }}>
+        <div style={{ fontSize: '8px', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          Vybrané Zařízení
+        </div>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>
+          {deviceTypeLabels[selectedNode.data.type] || selectedNode.data.type}
+        </h3>
+      </div>
+
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '8px', 
+        padding: '14px',
+        marginBottom: '11px',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+      }}>
+        <label style={{ 
+          display: 'block', 
+          fontSize: '9px', 
+          fontWeight: '600', 
+          marginBottom: '6px',
+          color: '#334155',
+        }}>
+          Název Zařízení
+        </label>
+        <input
+          type="text"
+          value={selectedNode.data.label}
+          onChange={handleNameChange}
+          style={{
+            width: '100%',
+            padding: '7px 8px',
+            borderRadius: '6px',
+            border: '1.5px solid #e2e8f0',
+            fontSize: '10px',
+            fontWeight: '500',
+            transition: 'all 0.2s',
+            outline: 'none',
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#3b82f6';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = '#e2e8f0';
+          }}
+        />
+      </div>
+
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '8px', 
+        padding: '14px',
+        marginBottom: '11px',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+      }}>
+        <label style={{ 
+          display: 'block', 
+          fontSize: '9px', 
+          fontWeight: '600', 
+          marginBottom: '6px',
+          color: '#334155',
+        }}>
+          Typ Zařízení
+        </label>
+        <div style={{
+          padding: '7px 8px',
+          borderRadius: '6px',
+          background: '#f1f5f9',
+          fontSize: '10px',
+          fontWeight: '500',
+          color: '#64748b',
+        }}>
+          {selectedNode.data.type.toUpperCase()}
+        </div>
+      </div>
+
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '8px', 
+        padding: '14px',
+        marginBottom: '11px',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+      }}>
+        <div style={{ 
+          fontSize: '9px', 
+          fontWeight: '600', 
+          marginBottom: '8px',
+          color: '#334155',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>🔌</span>
+            <span>Rozhraní</span>
+          </div>
+          <button
+            onClick={handleAddInterface}
+            style={{
+              padding: '3px 6px',
+              background: '#3b82f6',
+              border: 'none',
+              borderRadius: '4px',
+              color: 'white',
+              fontSize: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+            }}
+          >
+            + Přidat
+          </button>
+        </div>
+        {selectedNode.data.interfaces.length === 0 ? (
+          <div style={{ 
+            padding: '11px', 
+            background: '#f8fafc',
+            borderRadius: '6px',
+            textAlign: 'center',
+            color: '#64748b',
+            fontSize: '9px',
+          }}>
+            Žádná rozhraní nakonfigurována
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {selectedNode.data.interfaces.map((iface, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '8px',
+                  background: editingInterface === idx ? '#eff6ff' : '#f8fafc',
+                  borderRadius: '6px',
+                  fontSize: '9px',
+                  border: editingInterface === idx ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
+                }}
+              >
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: editingInterface === idx ? '6px' : '3px',
+                }}>
+                  <div style={{ fontWeight: '600', color: '#0f172a' }}>
+                    {iface.name}
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {editingInterface !== idx && (
+                      <>
+                        <button
+                          onClick={() => handleEditInterface(idx)}
+                          style={{
+                            padding: '2px 5px',
+                            background: '#3b82f6',
+                            border: 'none',
+                            borderRadius: '3px',
+                            color: 'white',
+                            fontSize: '7px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDeleteInterface(idx)}
+                          style={{
+                            padding: '2px 5px',
+                            background: '#ef4444',
+                            border: 'none',
+                            borderRadius: '3px',
+                            color: 'white',
+                            fontSize: '7px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          🗑️
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {editingInterface === idx ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <div>
+                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                        IPv4 Adresa
+                      </label>
+                      <input
+                        type="text"
+                        value={ipv4}
+                        onChange={(e) => setIpv4(e.target.value)}
+                        placeholder="192.168.1.1"
+                        style={{
+                          width: '100%',
+                          padding: '4px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '8px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                        Subnet Maska
+                      </label>
+                      <input
+                        type="text"
+                        value={subnet}
+                        onChange={(e) => setSubnet(e.target.value)}
+                        placeholder="255.255.255.0"
+                        style={{
+                          width: '100%',
+                          padding: '4px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '8px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                        IPv6 Adresa
+                      </label>
+                      <input
+                        type="text"
+                        value={ipv6}
+                        onChange={(e) => setIpv6(e.target.value)}
+                        placeholder="2001:db8::1"
+                        style={{
+                          width: '100%',
+                          padding: '4px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '8px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                        Default Gateway
+                      </label>
+                      <input
+                        type="text"
+                        value={gateway}
+                        onChange={(e) => setGateway(e.target.value)}
+                        placeholder="192.168.1.254"
+                        style={{
+                          width: '100%',
+                          padding: '4px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '8px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                        Pozice Portu
+                      </label>
+                      <select
+                        value={iface.position || 'left'}
+                        onChange={(e) => {
+                          const newInterfaces = [...selectedNode.data.interfaces];
+                          newInterfaces[idx] = {
+                            ...newInterfaces[idx],
+                            position: e.target.value as 'left' | 'right' | 'top' | 'bottom',
+                          };
+                          updateNode(selectedNode.id, { interfaces: newInterfaces });
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '4px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '8px',
+                        }}
+                      >
+                        <option value="left">⬅️ Vlevo</option>
+                        <option value="right">➡️ Vpravo</option>
+                        <option value="top">⬆️ Nahoře</option>
+                        <option value="bottom">⬇️ Dole</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px', marginTop: '3px' }}>
+                      <button
+                        onClick={() => handleSaveInterface(idx)}
+                        style={{
+                          flex: 1,
+                          padding: '4px',
+                          background: '#10b981',
+                          border: 'none',
+                          borderRadius: '4px',
+                          color: 'white',
+                          fontSize: '8px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                        }}
+                      >
+                        💾 Uložit
+                      </button>
+                      <button
+                        onClick={() => setEditingInterface(null)}
+                        style={{
+                          flex: 1,
+                          padding: '4px',
+                          background: '#6b7280',
+                          border: 'none',
+                          borderRadius: '4px',
+                          color: 'white',
+                          fontSize: '8px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                        }}
+                      >
+                        ✖️ Zrušit
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {iface.ipAddress && (
+                      <div style={{ color: '#64748b', fontSize: '8px', marginBottom: '2px' }}>
+                        IPv4: {iface.ipAddress}/{iface.subnetMask}
+                      </div>
+                    )}
+                    {iface.ipv6Address && (
+                      <div style={{ color: '#64748b', fontSize: '8px', marginBottom: '2px' }}>
+                        IPv6: {iface.ipv6Address}
+                      </div>
+                    )}
+                    {iface.gateway && (
+                      <div style={{ color: '#64748b', fontSize: '8px', marginBottom: '2px' }}>
+                        Gateway: {iface.gateway}
+                      </div>
+                    )}
+                    {iface.trunkMode && (
+                      <div style={{ color: '#8b5cf6', fontSize: '8px', fontWeight: '600', marginBottom: '2px' }}>
+                        🔀 802.1Q Trunk
+                      </div>
+                    )}
+                    {selectedNode.data.type === 'switch' && iface.vlanId && !iface.trunkMode && (
+                      <div style={{ color: '#0ea5e9', fontSize: '8px', fontWeight: '600' }}>
+                        VLAN {iface.vlanId} (Access)
+                      </div>
+                    )}
+                    {iface.description && (
+                      <div style={{ color: '#94a3b8', fontSize: '7px', fontStyle: 'italic', marginTop: '2px' }}>
+                        {iface.description}
+                      </div>
+                    )}
+                    {!iface.ipAddress && !iface.ipv6Address && !iface.trunkMode && selectedNode.data.type !== 'switch' && (
+                      <div style={{ color: '#94a3b8', fontSize: '8px', fontStyle: 'italic' }}>
+                        Nekonfigurováno
+                      </div>
+                    )}
+                    
+                    {/* Sub-interfaces (pro routery s trunk porty) */}
+                    {selectedNode.data.type === 'router' && iface.subInterfaces && iface.subInterfaces.length > 0 && (
+                      <div style={{ 
+                        marginTop: '6px', 
+                        paddingLeft: '8px', 
+                        borderLeft: '2px solid #8b5cf6',
+                        background: '#f8f9ff',
+                        padding: '4px 6px',
+                        borderRadius: '4px',
+                      }}>
+                        <div style={{ fontSize: '7px', fontWeight: '600', color: '#8b5cf6', marginBottom: '3px' }}>
+                          Sub-interfaces:
+                        </div>
+                        {iface.subInterfaces.map((subIface, subIdx) => (
+                          <div key={subIdx} style={{ 
+                            fontSize: '7px', 
+                            color: '#475569',
+                            marginBottom: '2px',
+                            paddingLeft: '4px',
+                          }}>
+                            <span style={{ fontWeight: '600', color: '#0ea5e9' }}>
+                              {subIface.name}
+                            </span>
+                            {' '}
+                            <span style={{ color: '#94a3b8' }}>
+                              (VLAN {subIface.vlanId})
+                            </span>
+                            {subIface.ipAddress && (
+                              <div style={{ color: '#64748b', fontSize: '7px' }}>
+                                → {subIface.ipAddress}/{subIface.subnetMask}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Routing Table - pouze pro routery */}
+      {selectedNode.data.type === 'router' && (
+        <div style={{ marginTop: '14px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '8px',
+          }}>
+            <h3 style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              color: '#1e293b',
+              letterSpacing: '0.3px',
+            }}>
+              🗺️ ROUTING TABLE
+            </h3>
+            <button
+              onClick={() => setShowAddRoute(!showAddRoute)}
+              style={{
+                padding: '3px 8px',
+                background: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '9px',
+                cursor: 'pointer',
+                fontWeight: '600',
+              }}
+            >
+              {showAddRoute ? '✖️' : '➕ Add'}
+            </button>
+          </div>
+
+          {showAddRoute && (
+            <div style={{
+              background: '#f1f5f9',
+              padding: '10px',
+              borderRadius: '6px',
+              marginBottom: '8px',
+              border: '1px solid #cbd5e1',
+            }}>
+              <input
+                type="text"
+                placeholder="Network (192.168.2.0)"
+                value={routeNetwork}
+                onChange={(e) => setRouteNetwork(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Mask (255.255.255.0)"
+                value={routeMask}
+                onChange={(e) => setRouteMask(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Next Hop (10.0.0.2)"
+                value={routeNextHop}
+                onChange={(e) => setRouteNextHop(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="number"
+                placeholder="Metric"
+                value={routeMetric}
+                onChange={(e) => setRouteMetric(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '8px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <button
+                onClick={handleAddRoute}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  background: '#059669',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                }}
+              >
+                💾 Save Route
+              </button>
+            </div>
+          )}
+
+          <div style={{
+            maxHeight: '180px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}>
+            {(selectedNode.data.routingTable || []).length === 0 ? (
+              <div style={{
+                padding: '10px',
+                background: '#f8fafc',
+                borderRadius: '6px',
+                textAlign: 'center',
+                color: '#94a3b8',
+                fontSize: '9px',
+                fontStyle: 'italic',
+              }}>
+                Žádné routy
+              </div>
+            ) : (
+              (selectedNode.data.routingTable || []).map((route, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: '8px',
+                    background: 'white',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '4px',
+                  }}>
+                    <div style={{
+                      fontSize: '9px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                      fontFamily: 'monospace',
+                    }}>
+                      {route.network}/{route.mask}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteRoute(index)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        fontSize: '10px',
+                        padding: '0',
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '8px', color: '#64748b' }}>
+                    via {route.nextHop}
+                  </div>
+                  <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
+                    {route.protocol} [metric: {route.metric || 1}]
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DHCP Server - pro routery a servery */}
+      {(selectedNode.data.type === 'router' || selectedNode.data.type === 'server') && (
+        <div style={{ marginTop: '14px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '8px',
+          }}>
+            <h3 style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              color: '#1e293b',
+              letterSpacing: '0.3px',
+            }}>
+              🌐 DHCP SERVER
+            </h3>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                fontSize: '9px',
+                color: '#64748b',
+                gap: '6px',
+              }}>
+                <span>{selectedNode.data.isDhcpServer ? 'ON' : 'OFF'}</span>
+                <div
+                  onClick={() => {
+                    updateNode(selectedNode.id, {
+                      isDhcpServer: !selectedNode.data.isDhcpServer,
+                    });
+                  }}
+                  style={{
+                    width: '36px',
+                    height: '18px',
+                    background: selectedNode.data.isDhcpServer ? '#059669' : '#cbd5e1',
+                    borderRadius: '9px',
+                    position: 'relative',
+                    transition: 'background 0.3s',
+                  }}
+                >
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    background: 'white',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '2px',
+                    left: selectedNode.data.isDhcpServer ? '20px' : '2px',
+                    transition: 'left 0.3s',
+                  }} />
+                </div>
+              </label>
+              {selectedNode.data.isDhcpServer && (
+                <button
+                  onClick={() => setShowAddDhcp(!showAddDhcp)}
+                  style={{
+                    padding: '3px 8px',
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '9px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  {showAddDhcp ? '✖️' : '➕ Add Pool'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {selectedNode.data.isDhcpServer && showAddDhcp && (
+            <div style={{
+              background: '#f1f5f9',
+              padding: '10px',
+              borderRadius: '6px',
+              marginBottom: '8px',
+              border: '1px solid #cbd5e1',
+            }}>
+              <input
+                type="text"
+                placeholder="Pool Name (LAN)"
+                value={dhcpName}
+                onChange={(e) => setDhcpName(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Network (192.168.1.0)"
+                value={dhcpNetwork}
+                onChange={(e) => setDhcpNetwork(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Mask (255.255.255.0)"
+                value={dhcpMask}
+                onChange={(e) => setDhcpMask(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Default Router (optional)"
+                value={dhcpRouter}
+                onChange={(e) => setDhcpRouter(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="DNS Server (optional)"
+                value={dhcpDns}
+                onChange={(e) => setDhcpDns(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '8px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <button
+                onClick={handleAddDhcpPool}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  background: '#059669',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                }}
+              >
+                💾 Save Pool
+              </button>
+            </div>
+          )}
+
+          {selectedNode.data.isDhcpServer && (
+            <div style={{
+              maxHeight: '150px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+            }}>
+              {(selectedNode.data.dhcpPools || []).length === 0 ? (
+                <div style={{
+                  padding: '10px',
+                  background: '#f8fafc',
+                  borderRadius: '6px',
+                  textAlign: 'center',
+                  color: '#94a3b8',
+                  fontSize: '9px',
+                  fontStyle: 'italic',
+                }}>
+                  Žádné DHCP pooly
+                </div>
+              ) : (
+                (selectedNode.data.dhcpPools || []).map((pool, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: '8px',
+                    background: 'white',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '4px',
+                  }}>
+                    <div style={{
+                      fontSize: '9px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                    }}>
+                      {pool.name}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteDhcpPool(index)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        fontSize: '10px',
+                        padding: '0',
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '8px', color: '#64748b', fontFamily: 'monospace' }}>
+                    {pool.network}/{pool.mask}
+                  </div>
+                  {pool.defaultRouter && (
+                    <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
+                      Gateway: {pool.defaultRouter}
+                    </div>
+                  )}
+                  {pool.dnsServer && (
+                    <div style={{ fontSize: '7px', color: '#94a3b8' }}>
+                      DNS: {pool.dnsServer}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DNS Server - pro routery a servery */}
+      {(selectedNode.data.type === 'router' || selectedNode.data.type === 'server') && (
+        <div style={{ marginTop: '14px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '8px',
+          }}>
+            <h3 style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              color: '#1e293b',
+            letterSpacing: '0.3px',
+          }}>
+            🔤 DNS SERVER
+          </h3>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              fontSize: '9px',
+              color: '#64748b',
+              gap: '6px',
+            }}>
+              <span>{selectedNode.data.isDnsServer ? 'ON' : 'OFF'}</span>
+              <div
+                onClick={() => {
+                  updateNode(selectedNode.id, {
+                    isDnsServer: !selectedNode.data.isDnsServer,
+                  });
+                }}
+                style={{
+                  width: '36px',
+                  height: '18px',
+                  background: selectedNode.data.isDnsServer ? '#7c3aed' : '#cbd5e1',
+                  borderRadius: '9px',
+                  position: 'relative',
+                  transition: 'background 0.3s',
+                }}
+              >
+                <div style={{
+                  width: '14px',
+                  height: '14px',
+                  background: 'white',
+                  borderRadius: '50%',
+                  position: 'absolute',
+                  top: '2px',
+                  left: selectedNode.data.isDnsServer ? '20px' : '2px',
+                  transition: 'left 0.3s',
+                }} />
+              </div>
+            </label>
+            {selectedNode.data.isDnsServer && (
+              <button
+                onClick={() => setShowAddDns(!showAddDns)}
+                style={{
+                  padding: '3px 8px',
+                  background: '#7c3aed',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                }}
+              >
+                {showAddDns ? '✖️' : '➕ Add Record'}
+              </button>
+            )}
+          </div>
+        </div>
+
+          {selectedNode.data.isDnsServer && showAddDns && (
+            <div style={{
+              background: '#f1f5f9',
+              padding: '10px',
+              borderRadius: '6px',
+              marginBottom: '8px',
+              border: '1px solid #cbd5e1',
+            }}>
+              <input
+                type="text"
+                placeholder="Hostname (pc1.local)"
+                value={dnsHostname}
+                onChange={(e) => setDnsHostname(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="IP Address"
+                value={dnsIpAddress}
+                onChange={(e) => setDnsIpAddress(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <select
+                value={dnsType}
+                onChange={(e) => setDnsType(e.target.value as 'A' | 'AAAA' | 'CNAME')}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '8px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              >
+                <option value="A">A (IPv4)</option>
+                <option value="AAAA">AAAA (IPv6)</option>
+                <option value="CNAME">CNAME (Alias)</option>
+              </select>
+              <button
+                onClick={handleAddDnsRecord}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  background: '#7c3aed',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                }}
+              >
+                💾 Save Record
+              </button>
+            </div>
+          )}
+
+          {selectedNode.data.isDnsServer && (
+            <div style={{
+              maxHeight: '150px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+            }}>
+              {(selectedNode.data.dnsRecords || []).length === 0 ? (
+                <div style={{
+                  padding: '10px',
+                  background: '#f8fafc',
+                  borderRadius: '6px',
+                  textAlign: 'center',
+                  color: '#94a3b8',
+                  fontSize: '9px',
+                  fontStyle: 'italic',
+                }}>
+                  Žádné DNS záznamy
+                </div>
+              ) : (
+                (selectedNode.data.dnsRecords || []).map((record, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: '8px',
+                    background: 'white',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '4px',
+                  }}>
+                    <div style={{
+                      fontSize: '9px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                    }}>
+                      {record.hostname}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteDnsRecord(index)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        fontSize: '10px',
+                        padding: '0',
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '8px', color: '#64748b', fontFamily: 'monospace' }}>
+                    {record.ipAddress}
+                  </div>
+                  <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
+                    Type: {record.type}
+                  </div>
+                </div>
+              ))
+            )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VLAN Configuration - only for switches */}
+      {selectedNode.data.type === 'switch' && (
+        <div style={{ marginTop: '14px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '8px',
+          }}>
+            <h3 style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              color: '#1e293b',
+              letterSpacing: '0.3px',
+            }}>
+              🔀 VLAN CONFIGURATION
+            </h3>
+            <button
+              onClick={() => setShowAddVlan(!showAddVlan)}
+              style={{
+                padding: '3px 8px',
+                background: '#0ea5e9',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '9px',
+                cursor: 'pointer',
+                fontWeight: '600',
+              }}
+            >
+              {showAddVlan ? '✖️' : '➕ Add VLAN'}
+            </button>
+          </div>
+
+          {showAddVlan && (
+            <div style={{
+              background: '#f1f5f9',
+              padding: '10px',
+              borderRadius: '6px',
+              marginBottom: '8px',
+              border: '1px solid #cbd5e1',
+            }}>
+              <input
+                type="number"
+                placeholder="VLAN ID (2-4094)"
+                value={vlanId}
+                onChange={(e) => setVlanId(e.target.value)}
+                min="1"
+                max="4094"
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '6px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="VLAN Name (optional)"
+                value={vlanName}
+                onChange={(e) => setVlanName(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  marginBottom: '8px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                }}
+              />
+              <button
+                onClick={handleAddVlan}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  background: '#0ea5e9',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                }}
+              >
+                💾 Save VLAN
+              </button>
+            </div>
+          )}
+
+          <div style={{
+            maxHeight: '150px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            marginBottom: '12px',
+          }}>
+            {(selectedNode.data.vlans || [{ id: 1, name: 'default', ports: [] }]).map((vlan) => (
+              <div
+                key={vlan.id}
+                style={{
+                  padding: '8px',
+                  background: 'white',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '4px',
+                }}>
+                  <div>
+                    <div style={{
+                      fontSize: '9px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                    }}>
+                      VLAN {vlan.id} - {vlan.name}
+                    </div>
+                    <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
+                      Ports: {vlan.ports.length > 0 ? vlan.ports.join(', ') : 'None'}
+                    </div>
+                  </div>
+                  {vlan.id !== 1 && (
+                    <button
+                      onClick={() => handleDeleteVlan(vlan.id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        fontSize: '10px',
+                        padding: '0',
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Port Configuration */}
+          <div style={{
+            background: '#f8fafc',
+            padding: '10px',
+            borderRadius: '6px',
+            border: '1px solid #e2e8f0',
+          }}>
+            <h4 style={{
+              fontSize: '10px',
+              fontWeight: '600',
+              color: '#1e293b',
+              marginBottom: '8px',
+            }}>
+              🔌 Port Assignment
+            </h4>
+            <div style={{
+              maxHeight: '200px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}>
+              {selectedNode.data.interfaces.map((iface) => (
+                <div
+                  key={iface.name}
+                  style={{
+                    padding: '6px',
+                    background: editingPort === iface.name ? '#dbeafe' : 'white',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                  }}
+                >
+                  {editingPort === iface.name ? (
+                    <div>
+                      <div style={{ fontSize: '8px', fontWeight: '600', marginBottom: '4px', color: '#1e293b' }}>
+                        {iface.name}
+                      </div>
+                      <select
+                        value={portVlan}
+                        onChange={(e) => setPortVlan(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '4px',
+                          marginBottom: '4px',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '3px',
+                          fontSize: '8px',
+                        }}
+                      >
+                        <option value="1">VLAN 1 (default)</option>
+                        {(selectedNode.data.vlans || []).filter(v => v.id !== 1).map(vlan => (
+                          <option key={vlan.id} value={vlan.id}>
+                            VLAN {vlan.id} - {vlan.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={handleSavePortConfig}
+                          style={{
+                            flex: 1,
+                            padding: '4px',
+                            background: '#0ea5e9',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '3px',
+                            fontSize: '7px',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                          }}
+                        >
+                          ✓ Save
+                        </button>
+                        <button
+                          onClick={() => setEditingPort(null)}
+                          style={{
+                            flex: 1,
+                            padding: '4px',
+                            background: '#94a3b8',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '3px',
+                            fontSize: '7px',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                          }}
+                        >
+                          ✖ Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '8px', fontWeight: '600', color: '#1e293b' }}>
+                          {iface.name}
+                        </div>
+                        <div style={{ fontSize: '7px', color: '#64748b' }}>
+                          VLAN {iface.vlanId || 1}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleEditPort(iface.name)}
+                        style={{
+                          padding: '2px 6px',
+                          background: '#0ea5e9',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '3px',
+                          fontSize: '7px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                        }}
+                      >
+                        ⚙️ Configure
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginTop: '14px' }}>
+        <button
+          style={{
+            width: '100%',
+            padding: '8px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '10px',
+            fontWeight: '600',
+            boxShadow: '0 3px 4px rgba(59, 130, 246, 0.3)',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1.5px)';
+            e.currentTarget.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 3px 4px rgba(59, 130, 246, 0.3)';
+          }}
+        >
+          ⚙️ Konfigurovat
+        </button>
+
+        <button
+          onClick={() => setShowCLI(true)}
+          style={{
+            width: '100%',
+            padding: '8px',
+            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+            border: 'none',
+            borderRadius: '6px',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: '10px',
+            fontWeight: '600',
+            boxShadow: '0 3px 4px rgba(5, 150, 105, 0.3)',
+            transition: 'all 0.2s',
+            marginBottom: '8px',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1.5px)';
+            e.currentTarget.style.boxShadow = '0 4px 8px rgba(5, 150, 105, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 3px 4px rgba(5, 150, 105, 0.3)';
+          }}
+        >
+          📟 Otevřít CLI
+        </button>
+
+        <button
+          onClick={handleDelete}
+          style={{
+            width: '100%',
+            padding: '8px',
+            background: 'white',
+            color: '#dc2626',
+            border: '1.5px solid #fecaca',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '10px',
+            fontWeight: '600',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#fef2f2';
+            e.currentTarget.style.borderColor = '#dc2626';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'white';
+            e.currentTarget.style.borderColor = '#fecaca';
+          }}
+        >
+          🗑️ Smazat Zařízení
+        </button>
+      </div>
+
+      {showCLI && <CLITerminal device={selectedNode} onClose={() => setShowCLI(false)} />}
+    </div>
+  );
+}
