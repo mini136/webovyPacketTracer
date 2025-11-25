@@ -1,9 +1,9 @@
 # Webový Packet Tracer
 
-**Autor:** Tomáš Blova  
-**Kontakt:** blova@example.com  
+**Autor:** Lukáš Blova  k
+**Kontakt:** blovak.l@gmail.com
 **Datum:** Prosinec 2024  
-**Škola:** [Název školy]  
+**Škola:** SPŠE Ječná
 **Poznámka:** Školní projekt  
 
 ---
