@@ -1,8 +1,8 @@
 # Webový Packet Tracer
 
-**Autor:** Lukáš Blova  k
+**Autor:** Lukáš Blovak
 **Kontakt:** blovak.l@gmail.com
-**Datum:** Prosinec 2024  
+**Datum:** Listopad 2025
 **Škola:** SPŠE Ječná
 **Poznámka:** Školní projekt  
 
