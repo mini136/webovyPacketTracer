@@ -25,6 +25,8 @@ export interface NetworkInterface {
   enabled?: boolean;
   vlanId?: number;
   trunkMode?: boolean; // true = trunk port (tagged), false/undefined = access port
+  allowedVlans?: number[]; // For trunk ports: list of allowed VLANs (e.g., [10, 20, 30])
+  nativeVlan?: number; // For trunk ports: native/untagged VLAN (default 1)
   description?: string;
   speed?: '10' | '100' | '1000' | 'auto';
   duplex?: 'half' | 'full' | 'auto';

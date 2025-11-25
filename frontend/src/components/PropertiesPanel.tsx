@@ -38,7 +38,19 @@ export default function PropertiesPanel() {
   const [vlanName, setVlanName] = useState('');
   const [editingPort, setEditingPort] = useState<string | null>(null);
   const [portVlan, setPortVlan] = useState('1');
-  const [portMode, setPortMode] = useState<'access' | 'trunk'>('access');
+
+  // Sub-interface state (for routers)
+  const [showAddSubInterface, setShowAddSubInterface] = useState<number | null>(null);
+  const [subInterfaceName, setSubInterfaceName] = useState('');
+  const [subInterfaceVlan, setSubInterfaceVlan] = useState('');
+  const [subInterfaceIp, setSubInterfaceIp] = useState('');
+  const [subInterfaceMask, setSubInterfaceMask] = useState('');
+  const [subInterfaceDesc, setSubInterfaceDesc] = useState('');
+
+  // Trunk port configuration state
+  const [configuringTrunk, setConfiguringTrunk] = useState<number | null>(null);
+  const [trunkAllowedVlans, setTrunkAllowedVlans] = useState<number[]>([]);
+  const [trunkNativeVlan, setTrunkNativeVlan] = useState('1');
 
   if (!selectedNode) {
     return (
@@ -260,7 +272,6 @@ export default function PropertiesPanel() {
     setEditingPort(portName);
     const iface = selectedNode.data.interfaces.find(i => i.name === portName);
     setPortVlan((iface?.vlanId || 1).toString());
-    setPortMode('access');
   };
 
   const handleSavePortConfig = () => {
@@ -291,6 +302,120 @@ export default function PropertiesPanel() {
     
     updateNode(selectedNode.id, { vlans: updatedVlans, interfaces });
     setEditingPort(null);
+  };
+
+  // Sub-interface handlers for routers
+  const handleAddSubInterface = (interfaceIndex: number) => {
+    if (!subInterfaceName || !subInterfaceVlan) {
+      alert('Vyplň jméno sub-interface a VLAN ID!');
+      return;
+    }
+
+    const vlanId = parseInt(subInterfaceVlan);
+    if (isNaN(vlanId) || vlanId < 1 || vlanId > 4094) {
+      alert('VLAN ID musí být mezi 1 a 4094');
+      return;
+    }
+
+    const newInterfaces = [...selectedNode.data.interfaces];
+    const parentInterface = newInterfaces[interfaceIndex];
+    
+    const newSubInterface = {
+      name: subInterfaceName,
+      vlanId: vlanId,
+      ipAddress: subInterfaceIp,
+      subnetMask: subInterfaceMask,
+      description: subInterfaceDesc,
+    };
+
+    if (!parentInterface.subInterfaces) {
+      parentInterface.subInterfaces = [];
+    }
+
+    // Check if sub-interface already exists
+    if (parentInterface.subInterfaces.find(si => si.name === subInterfaceName || si.vlanId === vlanId)) {
+      alert('Sub-interface s tímto jménem nebo VLAN ID již existuje!');
+      return;
+    }
+
+    parentInterface.subInterfaces.push(newSubInterface);
+    parentInterface.trunkMode = true; // Automatically enable trunk mode
+
+    updateNode(selectedNode.id, { interfaces: newInterfaces });
+    
+    // Reset form
+    setSubInterfaceName('');
+    setSubInterfaceVlan('');
+    setSubInterfaceIp('');
+    setSubInterfaceMask('');
+    setSubInterfaceDesc('');
+    setShowAddSubInterface(null);
+  };
+
+  const handleDeleteSubInterface = (interfaceIndex: number, subInterfaceIndex: number) => {
+    const newInterfaces = [...selectedNode.data.interfaces];
+    const parentInterface = newInterfaces[interfaceIndex];
+    
+    if (parentInterface.subInterfaces) {
+      parentInterface.subInterfaces = parentInterface.subInterfaces.filter((_, idx) => idx !== subInterfaceIndex);
+      
+      // Disable trunk mode if no sub-interfaces remain
+      if (parentInterface.subInterfaces.length === 0) {
+        parentInterface.trunkMode = false;
+      }
+    }
+
+    updateNode(selectedNode.id, { interfaces: newInterfaces });
+  };
+
+  // Trunk port configuration handlers
+  const handleToggleTrunkMode = (interfaceIndex: number) => {
+    const newInterfaces = [...selectedNode.data.interfaces];
+    const iface = newInterfaces[interfaceIndex];
+    
+    iface.trunkMode = !iface.trunkMode;
+    
+    if (iface.trunkMode) {
+      // Initialize trunk settings
+      if (!iface.allowedVlans || iface.allowedVlans.length === 0) {
+        iface.allowedVlans = [1]; // Default to VLAN 1
+      }
+      if (!iface.nativeVlan) {
+        iface.nativeVlan = 1;
+      }
+    } else {
+      // Clear trunk settings when switching to access mode
+      iface.allowedVlans = undefined;
+      iface.nativeVlan = undefined;
+    }
+
+    updateNode(selectedNode.id, { interfaces: newInterfaces });
+  };
+
+  const handleSaveTrunkConfig = (interfaceIndex: number) => {
+    const newInterfaces = [...selectedNode.data.interfaces];
+    const iface = newInterfaces[interfaceIndex];
+    
+    iface.allowedVlans = trunkAllowedVlans;
+    iface.nativeVlan = parseInt(trunkNativeVlan) || 1;
+
+    updateNode(selectedNode.id, { interfaces: newInterfaces });
+    setConfiguringTrunk(null);
+  };
+
+  const handleToggleVlanInTrunk = (vlanId: number) => {
+    if (trunkAllowedVlans.includes(vlanId)) {
+      setTrunkAllowedVlans(trunkAllowedVlans.filter(v => v !== vlanId));
+    } else {
+      setTrunkAllowedVlans([...trunkAllowedVlans, vlanId].sort((a, b) => a - b));
+    }
+  };
+
+  const handleConfigureTrunk = (interfaceIndex: number) => {
+    const iface = selectedNode.data.interfaces[interfaceIndex];
+    setConfiguringTrunk(interfaceIndex);
+    setTrunkAllowedVlans(iface.allowedVlans || [1]);
+    setTrunkNativeVlan((iface.nativeVlan || 1).toString());
   };
 
   const deviceTypeLabels: Record<string, string> = {
@@ -687,23 +812,351 @@ export default function PropertiesPanel() {
                           <div key={subIdx} style={{ 
                             fontSize: '7px', 
                             color: '#475569',
-                            marginBottom: '2px',
+                            marginBottom: '4px',
                             paddingLeft: '4px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
                           }}>
-                            <span style={{ fontWeight: '600', color: '#0ea5e9' }}>
-                              {subIface.name}
-                            </span>
-                            {' '}
-                            <span style={{ color: '#94a3b8' }}>
-                              (VLAN {subIface.vlanId})
-                            </span>
-                            {subIface.ipAddress && (
-                              <div style={{ color: '#64748b', fontSize: '7px' }}>
-                                → {subIface.ipAddress}/{subIface.subnetMask}
-                              </div>
-                            )}
+                            <div>
+                              <span style={{ fontWeight: '600', color: '#0ea5e9' }}>
+                                {subIface.name}
+                              </span>
+                              {' '}
+                              <span style={{ color: '#94a3b8' }}>
+                                (VLAN {subIface.vlanId})
+                              </span>
+                              {subIface.ipAddress && (
+                                <div style={{ color: '#64748b', fontSize: '7px' }}>
+                                  → {subIface.ipAddress}/{subIface.subnetMask}
+                                </div>
+                              )}
+                              {subIface.description && (
+                                <div style={{ color: '#94a3b8', fontSize: '6px', fontStyle: 'italic' }}>
+                                  {subIface.description}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleDeleteSubInterface(idx, subIdx)}
+                              style={{
+                                padding: '1px 3px',
+                                background: '#ef4444',
+                                border: 'none',
+                                borderRadius: '2px',
+                                color: 'white',
+                                fontSize: '6px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              🗑️
+                            </button>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Router: Add Sub-Interface Button */}
+                    {selectedNode.data.type === 'router' && (
+                      <div style={{ marginTop: '6px' }}>
+                        {showAddSubInterface === idx ? (
+                          <div style={{
+                            background: '#f0f9ff',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            border: '1px solid #0ea5e9',
+                          }}>
+                            <div style={{ fontSize: '8px', fontWeight: '600', color: '#0ea5e9', marginBottom: '6px' }}>
+                              ➕ Přidat Sub-Interface
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <input
+                                type="text"
+                                placeholder={`${iface.name}.10`}
+                                value={subInterfaceName}
+                                onChange={(e) => setSubInterfaceName(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  padding: '4px',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="VLAN ID (10)"
+                                value={subInterfaceVlan}
+                                onChange={(e) => setSubInterfaceVlan(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  padding: '4px',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="IP Address"
+                                value={subInterfaceIp}
+                                onChange={(e) => setSubInterfaceIp(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  padding: '4px',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="Subnet Mask"
+                                value={subInterfaceMask}
+                                onChange={(e) => setSubInterfaceMask(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  padding: '4px',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="Description (optional)"
+                                value={subInterfaceDesc}
+                                onChange={(e) => setSubInterfaceDesc(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  padding: '4px',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                }}
+                              />
+                              <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                                <button
+                                  onClick={() => handleAddSubInterface(idx)}
+                                  style={{
+                                    flex: 1,
+                                    padding: '4px',
+                                    background: '#0ea5e9',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '3px',
+                                    fontSize: '7px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  ✓ Přidat
+                                </button>
+                                <button
+                                  onClick={() => setShowAddSubInterface(null)}
+                                  style={{
+                                    flex: 1,
+                                    padding: '4px',
+                                    background: '#94a3b8',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '3px',
+                                    fontSize: '7px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  ✖ Zrušit
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setShowAddSubInterface(idx);
+                              setSubInterfaceName(`${iface.name}.`);
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '4px',
+                              background: '#e0f2fe',
+                              color: '#0369a1',
+                              border: '1px dashed #0ea5e9',
+                              borderRadius: '3px',
+                              fontSize: '7px',
+                              cursor: 'pointer',
+                              fontWeight: '600',
+                            }}
+                          >
+                            ➕ Sub-Interface
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Switch: Trunk/Access Mode Toggle */}
+                    {selectedNode.data.type === 'switch' && (
+                      <div style={{ marginTop: '6px' }}>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          <button
+                            onClick={() => handleToggleTrunkMode(idx)}
+                            style={{
+                              flex: 1,
+                              padding: '4px',
+                              background: iface.trunkMode ? '#8b5cf6' : '#e2e8f0',
+                              color: iface.trunkMode ? 'white' : '#64748b',
+                              border: 'none',
+                              borderRadius: '3px',
+                              fontSize: '7px',
+                              cursor: 'pointer',
+                              fontWeight: '600',
+                            }}
+                          >
+                            {iface.trunkMode ? '🔀 Trunk Mode' : '📌 Access Mode'}
+                          </button>
+                          {iface.trunkMode && (
+                            <button
+                              onClick={() => handleConfigureTrunk(idx)}
+                              style={{
+                                padding: '4px 6px',
+                                background: '#3b82f6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '3px',
+                                fontSize: '7px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                              }}
+                            >
+                              ⚙️
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Trunk Configuration Panel */}
+                        {configuringTrunk === idx && iface.trunkMode && (
+                          <div style={{
+                            marginTop: '6px',
+                            background: '#f5f3ff',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            border: '1px solid #8b5cf6',
+                          }}>
+                            <div style={{ fontSize: '8px', fontWeight: '600', color: '#8b5cf6', marginBottom: '6px' }}>
+                              ⚙️ Trunk Port Configuration
+                            </div>
+                            
+                            <div style={{ marginBottom: '6px' }}>
+                              <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '3px' }}>
+                                Native VLAN (Untagged):
+                              </label>
+                              <input
+                                type="text"
+                                value={trunkNativeVlan}
+                                onChange={(e) => setTrunkNativeVlan(e.target.value)}
+                                placeholder="1"
+                                style={{
+                                  width: '100%',
+                                  padding: '4px',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                }}
+                              />
+                            </div>
+
+                            <div style={{ marginBottom: '6px' }}>
+                              <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '3px' }}>
+                                Allowed VLANs (Tagged):
+                              </label>
+                              <div style={{
+                                maxHeight: '100px',
+                                overflowY: 'auto',
+                                background: 'white',
+                                padding: '4px',
+                                borderRadius: '3px',
+                                border: '1px solid #cbd5e1',
+                              }}>
+                                {(selectedNode.data.vlans || [{ id: 1, name: 'default', ports: [] }]).map(vlan => (
+                                  <label
+                                    key={vlan.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      padding: '2px',
+                                      fontSize: '7px',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={trunkAllowedVlans.includes(vlan.id)}
+                                      onChange={() => handleToggleVlanInTrunk(vlan.id)}
+                                      style={{ cursor: 'pointer' }}
+                                    />
+                                    <span>VLAN {vlan.id} - {vlan.name}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button
+                                onClick={() => handleSaveTrunkConfig(idx)}
+                                style={{
+                                  flex: 1,
+                                  padding: '4px',
+                                  background: '#8b5cf6',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                  cursor: 'pointer',
+                                  fontWeight: '600',
+                                }}
+                              >
+                                ✓ Uložit
+                              </button>
+                              <button
+                                onClick={() => setConfiguringTrunk(null)}
+                                style={{
+                                  flex: 1,
+                                  padding: '4px',
+                                  background: '#94a3b8',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  fontSize: '7px',
+                                  cursor: 'pointer',
+                                  fontWeight: '600',
+                                }}
+                              >
+                                ✖ Zrušit
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Display allowed VLANs on trunk */}
+                        {iface.trunkMode && iface.allowedVlans && iface.allowedVlans.length > 0 && (
+                          <div style={{
+                            marginTop: '4px',
+                            fontSize: '7px',
+                            color: '#64748b',
+                            background: '#f8fafc',
+                            padding: '4px',
+                            borderRadius: '3px',
+                          }}>
+                            <div style={{ fontWeight: '600', marginBottom: '2px' }}>
+                              Allowed VLANs: {iface.allowedVlans.join(', ')}
+                            </div>
+                            <div style={{ color: '#8b5cf6' }}>
+                              Native VLAN: {iface.nativeVlan || 1}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
