@@ -106,7 +106,7 @@ Zpracovává síťové pakety pomocí worker pool. Když přijde packet (např. 
 
 ---
 
-### 3.2 Modul 2: DHCPServer.ts (300+ řádků)
+### 3.2 Modul 2: DHCPServer.ts
 
 **Umístění:** `frontend/src/utils/DHCPServer.ts`
 
@@ -173,7 +173,7 @@ DHCP server, který přiděluje IP adresy PC. Když se 5 PC zapne najednou, vše
 
 ---
 
-### 3.3 Modul 3: BroadcastStormPrevention.ts (350+ řádků)
+### 3.3 Modul 3: BroadcastStormPrevention.ts
 
 **Umístění:** `frontend/src/utils/BroadcastStormPrevention.ts`
 
