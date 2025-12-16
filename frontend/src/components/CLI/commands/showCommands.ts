@@ -11,9 +11,28 @@ export const showRunningConfigCommand: Command = {
     
     if (device.hostname) output.push(`hostname ${device.hostname}`);
     
+    // IPv6 global config
+    if (device.ipv6Enabled) {
+      output.push(`ipv6 unicast-routing`);
+    }
+    
+    // IPv6 static routes
+    if (device.ipv6RoutingTable && device.ipv6RoutingTable.length > 0) {
+      device.ipv6RoutingTable.forEach(route => {
+        output.push(`ipv6 route ${route.network}/${route.prefixLength} ${route.nextHop}`);
+      });
+    }
+    
     device.interfaces.forEach(iface => {
       output.push(`!`, `interface ${iface.name}`);
       if (iface.ipAddress) output.push(` ip address ${iface.ipAddress} ${iface.subnetMask || '255.255.255.0'}`);
+      if (iface.ipv6Enabled) {
+        if (iface.ipv6Address) {
+          output.push(` ipv6 address ${iface.ipv6Address}/${iface.ipv6PrefixLength || 64}`);
+        } else {
+          output.push(` ipv6 enable`);
+        }
+      }
       if (iface.description) output.push(` description ${iface.description}`);
       
       // Switch-specific config
@@ -43,6 +62,9 @@ export const showRunningConfigCommand: Command = {
           output.push(` encapsulation dot1Q ${subIface.vlanId}`);
           if (subIface.ipAddress) {
             output.push(` ip address ${subIface.ipAddress} ${subIface.subnetMask || '255.255.255.0'}`);
+          }
+          if (subIface.ipv6Enabled && subIface.ipv6Address) {
+            output.push(` ipv6 address ${subIface.ipv6Address}/${subIface.ipv6PrefixLength || 64}`);
           }
           if (subIface.description) {
             output.push(` description ${subIface.description}`);
@@ -176,10 +198,127 @@ export const showInterfacesTrunkCommand: Command = {
   }
 };
 
+export const showIpv6InterfaceBriefCommand: Command = {
+  name: 'show ipv6 interface brief',
+  aliases: ['sh ipv6 int br'],
+  description: 'Show IPv6 interface status',
+  mode: 'privileged',
+  execute: (_args, context) => {
+    const output: string[] = ['Interface              IPv6 Address                           Status   Protocol'];
+    
+    context.device.data.interfaces.forEach(iface => {
+      if (iface.ipv6Enabled || iface.ipv6Address) {
+        const ipv6 = iface.ipv6Address 
+          ? `${iface.ipv6Address}/${iface.ipv6PrefixLength || 64}` 
+          : 'unassigned';
+        const status = iface.enabled !== false ? 'up' : 'down';
+        const protocol = iface.enabled !== false ? 'up' : 'down';
+        output.push(`${iface.name.padEnd(22)} ${ipv6.padEnd(38)} ${status.padEnd(8)} ${protocol}`);
+        
+        // Show link-local if exists
+        if (iface.ipv6LinkLocal) {
+          output.push(`${''.padEnd(22)} ${iface.ipv6LinkLocal.padEnd(38)} [LINK-LOCAL]`);
+        }
+        
+        // Show sub-interfaces with IPv6
+        if (iface.subInterfaces && iface.subInterfaces.length > 0) {
+          iface.subInterfaces.forEach(subIface => {
+            if (subIface.ipv6Enabled || subIface.ipv6Address) {
+              const subIpv6 = subIface.ipv6Address 
+                ? `${subIface.ipv6Address}/${subIface.ipv6PrefixLength || 64}` 
+                : 'unassigned';
+              output.push(`${subIface.name.padEnd(22)} ${subIpv6.padEnd(38)} ${status.padEnd(8)} ${protocol}`);
+            }
+          });
+        }
+      }
+    });
+    
+    output.push('');
+    return { output };
+  }
+};
+
+export const showIpv6RouteCommand: Command = {
+  name: 'show ipv6 route',
+  aliases: ['sh ipv6 route'],
+  description: 'Show IPv6 routing table',
+  mode: 'privileged',
+  execute: (_args, context) => {
+    const output: string[] = ['IPv6 Routing Table - default - 1 entries', 'Codes: C - Connected, L - Local, S - Static', ''];
+    
+    if (context.device.data.ipv6RoutingTable && context.device.data.ipv6RoutingTable.length > 0) {
+      context.device.data.ipv6RoutingTable.forEach(route => {
+        const code = route.protocol === 'static' ? 'S' : 'C';
+        const prefix = `${route.network}/${route.prefixLength}`;
+        const via = route.exitInterface ? `via ${route.nextHop}, ${route.exitInterface}` : `via ${route.nextHop}`;
+        output.push(`${code}   ${prefix}`);
+        output.push(`     [${route.adminDistance || 1}/${route.metric || 0}] ${via}`);
+      });
+    } else {
+      output.push('% No IPv6 routing entries');
+    }
+    
+    output.push('');
+    return { output };
+  }
+};
+
+export const showIpv6InterfaceCommand: Command = {
+  name: 'show ipv6 interface',
+  aliases: ['sh ipv6 int'],
+  description: 'Show IPv6 interface details',
+  mode: 'privileged',
+  execute: (args, context) => {
+    const output: string[] = [];
+    
+    if (args.length > 0) {
+      // Show specific interface
+      const ifaceName = args.join(' ');
+      const iface = context.device.data.interfaces.find(i => 
+        i.name.toLowerCase() === ifaceName.toLowerCase() ||
+        i.name.toLowerCase().includes(ifaceName.toLowerCase())
+      );
+      
+      if (!iface) {
+        return { output: [`% Interface ${ifaceName} not found`] };
+      }
+      
+      output.push(`${iface.name} is ${iface.enabled !== false ? 'up' : 'administratively down'}, line protocol is ${iface.enabled !== false ? 'up' : 'down'}`);
+      output.push(`  IPv6 is ${iface.ipv6Enabled ? 'enabled' : 'disabled'}, link-local address is ${iface.ipv6LinkLocal || 'not configured'}`);
+      if (iface.ipv6Address) {
+        output.push(`  Global unicast address(es):`);
+        output.push(`    ${iface.ipv6Address}/${iface.ipv6PrefixLength || 64}, subnet is ${iface.ipv6Address}/${iface.ipv6PrefixLength || 64}`);
+      }
+      output.push(`  Joined group address(es):`);
+      output.push(`    FF02::1`);
+      output.push(`    FF02::2`);
+    } else {
+      // Show all IPv6-enabled interfaces
+      context.device.data.interfaces.forEach(iface => {
+        if (iface.ipv6Enabled || iface.ipv6Address) {
+          output.push(`${iface.name} is ${iface.enabled !== false ? 'up' : 'down'}, line protocol is ${iface.enabled !== false ? 'up' : 'down'}`);
+          output.push(`  IPv6 is enabled`);
+          if (iface.ipv6Address) {
+            output.push(`  ${iface.ipv6Address}/${iface.ipv6PrefixLength || 64}`);
+          }
+          output.push('');
+        }
+      });
+    }
+    
+    output.push('');
+    return { output };
+  }
+};
+
 export const showCommands: Command[] = [
   showRunningConfigCommand,
   showIpInterfaceBriefCommand,
   showIpRouteCommand,
+  showIpv6InterfaceBriefCommand,
+  showIpv6RouteCommand,
+  showIpv6InterfaceCommand,
   showVlanBriefCommand,
   showInterfacesTrunkCommand
 ];

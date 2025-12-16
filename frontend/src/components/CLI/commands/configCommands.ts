@@ -131,7 +131,10 @@ export const helpConfigCommand: Command = {
         'Configuration mode commands:',
         '  hostname NAME            - Set device hostname',
         '  interface TYPE NUM       - Enter interface configuration',
-        '  ip route NET MASK NH     - Add static route (routers)',
+        '  ip route NET MASK NH     - Add static IPv4 route (routers)',
+        '  ipv6 unicast-routing     - Enable IPv6 routing globally',
+        '  ipv6 route NET/PREFIX NH - Add static IPv6 route (routers)',
+        '  no ipv6 route NET/PREFIX - Remove IPv6 static route',
         '  vlan ID                  - Create VLAN (switches)',
         '  exit                     - Exit configuration mode',
         ''
@@ -140,10 +143,71 @@ export const helpConfigCommand: Command = {
   }
 };
 
+export const ipv6UnicastRoutingCommand: Command = {
+  name: 'ipv6 unicast-routing',
+  aliases: [],
+  description: 'Enable IPv6 routing',
+  mode: 'config',
+  execute: (_args, context) => {
+    context.updateNode(context.device.id, { ipv6Enabled: true });
+    return { output: [''] };
+  }
+};
+
+export const ipv6RouteCommand: Command = {
+  name: 'ipv6 route',
+  aliases: [],
+  description: 'Add static IPv6 route',
+  mode: 'config',
+  execute: (args, context) => {
+    if (args.length >= 2) {
+      // Format: ipv6 route 2001:db8::/64 2001:db8::1
+      // or: ipv6 route 2001:db8::/64 GigabitEthernet0/0
+      const [networkWithPrefix, nextHop] = args;
+      const [network, prefixLengthStr] = networkWithPrefix.split('/');
+      const prefixLength = parseInt(prefixLengthStr) || 64;
+      
+      const ipv6RoutingTable = context.device.data.ipv6RoutingTable || [];
+      ipv6RoutingTable.push({
+        network,
+        prefixLength,
+        nextHop,
+        protocol: 'static' as const,
+      });
+      context.updateNode(context.device.id, { ipv6RoutingTable });
+      return { output: [''] };
+    }
+    return { output: ['% Incomplete command. Usage: ipv6 route <network/prefix> <next-hop>'] };
+  }
+};
+
+export const noIpv6RouteCommand: Command = {
+  name: 'no ipv6 route',
+  aliases: [],
+  description: 'Remove static IPv6 route',
+  mode: 'config',
+  execute: (args, context) => {
+    if (args.length >= 1) {
+      const [networkWithPrefix] = args;
+      const [network] = networkWithPrefix.split('/');
+      
+      const ipv6RoutingTable = (context.device.data.ipv6RoutingTable || []).filter(
+        route => route.network !== network
+      );
+      context.updateNode(context.device.id, { ipv6RoutingTable });
+      return { output: [''] };
+    }
+    return { output: ['% Incomplete command'] };
+  }
+};
+
 export const configCommands: Command[] = [
   hostnameCommand,
   interfaceCommand,
   ipRouteCommand,
+  ipv6UnicastRoutingCommand,
+  ipv6RouteCommand,
+  noIpv6RouteCommand,
   vlanCommand,
   exitConfigCommand,
   helpConfigCommand

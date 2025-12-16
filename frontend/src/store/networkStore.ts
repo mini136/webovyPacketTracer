@@ -11,17 +11,29 @@ export interface PacketAnimation {
 export interface SubInterface {
   name: string; // e.g., "Gig0/0.10"
   vlanId: number;
+  // IPv4
   ipAddress?: string;
   subnetMask?: string;
+  // IPv6
+  ipv6Address?: string;
+  ipv6PrefixLength?: number;
+  ipv6Enabled?: boolean;
   description?: string;
 }
 
 export interface NetworkInterface {
   name: string;
+  // IPv4
   ipAddress?: string;
   subnetMask?: string;
-  ipv6Address?: string;
   gateway?: string;
+  // IPv6
+  ipv6Address?: string;
+  ipv6PrefixLength?: number; // e.g., 64 for /64
+  ipv6Gateway?: string;
+  ipv6LinkLocal?: string; // Auto-generated link-local address (fe80::/10)
+  ipv6Enabled?: boolean;
+  // General
   enabled?: boolean;
   vlanId?: number;
   trunkMode?: boolean; // true = trunk port (tagged), false/undefined = access port
@@ -44,6 +56,16 @@ export interface RoutingEntry {
   metric?: number;
   protocol?: 'static' | 'RIP' | 'OSPF' | 'EIGRP';
   adminDistance?: number;
+}
+
+export interface IPv6RoutingEntry {
+  network: string; // IPv6 address (e.g., "2001:db8::/64")
+  prefixLength: number; // e.g., 64
+  nextHop: string; // IPv6 address or interface name
+  metric?: number;
+  protocol?: 'static' | 'RIPng' | 'OSPFv3' | 'EIGRP';
+  adminDistance?: number;
+  exitInterface?: string; // Optional: outgoing interface name
 }
 
 export interface VLANConfig {
@@ -84,6 +106,8 @@ export interface DeviceNode extends Node {
     interfaces: NetworkInterface[];
     // Router specific
     routingTable?: RoutingEntry[];
+    ipv6RoutingTable?: IPv6RoutingEntry[];
+    ipv6Enabled?: boolean; // Global IPv6 enable/disable
     enableSecret?: string;
     hostname?: string;
     dhcpPools?: DHCPPool[];

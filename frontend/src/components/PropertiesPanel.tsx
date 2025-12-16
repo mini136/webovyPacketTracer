@@ -1,78 +1,90 @@
-import { useNetworkStore } from '../store/networkStore';
-import { useState } from 'react';
-import CLITerminal from './CLITerminal';
+import { useNetworkStore } from "../store/networkStore";
+import { useState } from "react";
+import CLITerminal from "./CLITerminal";
 
 export default function PropertiesPanel() {
   const { selectedNode, updateNode, removeNode } = useNetworkStore();
   const [editingInterface, setEditingInterface] = useState<number | null>(null);
   const [showCLI, setShowCLI] = useState(false);
-  const [ipv4, setIpv4] = useState('');
-  const [subnet, setSubnet] = useState('');
-  const [ipv6, setIpv6] = useState('');
-  const [gateway, setGateway] = useState('');
-  
+  const [ipv4, setIpv4] = useState("");
+  const [subnet, setSubnet] = useState("");
+  const [gateway, setGateway] = useState("");
+  const [ipv6, setIpv6] = useState("");
+  const [ipv6Prefix, setIpv6Prefix] = useState("64");
+  const [ipv6Gateway, setIpv6Gateway] = useState("");
+  const [ipv6Enabled, setIpv6Enabled] = useState(false);
+
   // Routing Table state
   const [showAddRoute, setShowAddRoute] = useState(false);
-  const [routeNetwork, setRouteNetwork] = useState('');
-  const [routeMask, setRouteMask] = useState('');
-  const [routeNextHop, setRouteNextHop] = useState('');
-  const [routeMetric, setRouteMetric] = useState('1');
+  const [routeNetwork, setRouteNetwork] = useState("");
+  const [routeMask, setRouteMask] = useState("");
+  const [routeNextHop, setRouteNextHop] = useState("");
+  const [routeMetric, setRouteMetric] = useState("1");
 
   // DHCP state
   const [showAddDhcp, setShowAddDhcp] = useState(false);
-  const [dhcpName, setDhcpName] = useState('');
-  const [dhcpNetwork, setDhcpNetwork] = useState('');
-  const [dhcpMask, setDhcpMask] = useState('');
-  const [dhcpRouter, setDhcpRouter] = useState('');
-  const [dhcpDns, setDhcpDns] = useState('');
+  const [dhcpName, setDhcpName] = useState("");
+  const [dhcpNetwork, setDhcpNetwork] = useState("");
+  const [dhcpMask, setDhcpMask] = useState("");
+  const [dhcpRouter, setDhcpRouter] = useState("");
+  const [dhcpDns, setDhcpDns] = useState("");
 
   // DNS state
   const [showAddDns, setShowAddDns] = useState(false);
-  const [dnsHostname, setDnsHostname] = useState('');
-  const [dnsIpAddress, setDnsIpAddress] = useState('');
-  const [dnsType, setDnsType] = useState<'A' | 'AAAA' | 'CNAME'>('A');
+  const [dnsHostname, setDnsHostname] = useState("");
+  const [dnsIpAddress, setDnsIpAddress] = useState("");
+  const [dnsType, setDnsType] = useState<"A" | "AAAA" | "CNAME">("A");
 
   // VLAN state (for switches)
   const [showAddVlan, setShowAddVlan] = useState(false);
-  const [vlanId, setVlanId] = useState('');
-  const [vlanName, setVlanName] = useState('');
+  const [vlanId, setVlanId] = useState("");
+  const [vlanName, setVlanName] = useState("");
   const [editingPort, setEditingPort] = useState<string | null>(null);
-  const [portVlan, setPortVlan] = useState('1');
+  const [portVlan, setPortVlan] = useState("1");
 
   // Sub-interface state (for routers)
-  const [showAddSubInterface, setShowAddSubInterface] = useState<number | null>(null);
-  const [subInterfaceName, setSubInterfaceName] = useState('');
-  const [subInterfaceVlan, setSubInterfaceVlan] = useState('');
-  const [subInterfaceIp, setSubInterfaceIp] = useState('');
-  const [subInterfaceMask, setSubInterfaceMask] = useState('');
-  const [subInterfaceDesc, setSubInterfaceDesc] = useState('');
+  const [showAddSubInterface, setShowAddSubInterface] = useState<number | null>(
+    null
+  );
+  const [subInterfaceName, setSubInterfaceName] = useState("");
+  const [subInterfaceVlan, setSubInterfaceVlan] = useState("");
+  const [subInterfaceIp, setSubInterfaceIp] = useState("");
+  const [subInterfaceMask, setSubInterfaceMask] = useState("");
+  const [subInterfaceDesc, setSubInterfaceDesc] = useState("");
 
   // Trunk port configuration state
   const [configuringTrunk, setConfiguringTrunk] = useState<number | null>(null);
   const [trunkAllowedVlans, setTrunkAllowedVlans] = useState<number[]>([]);
-  const [trunkNativeVlan, setTrunkNativeVlan] = useState('1');
+  const [trunkNativeVlan, setTrunkNativeVlan] = useState("1");
 
   if (!selectedNode) {
     return (
       <div
         style={{
-          width: '20vw',
-          minWidth: '300px',
-          maxWidth: '400px',
-          background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
-          padding: '17px',
-          height: '100vh',
-          borderLeft: '1px solid #e2e8f0',
+          width: "20vw",
+          minWidth: "300px",
+          maxWidth: "400px",
+          background: "linear-gradient(to bottom, #f8fafc, #f1f5f9)",
+          padding: "17px",
+          height: "100vh",
+          borderLeft: "1px solid #e2e8f0",
         }}
       >
-        <div style={{ textAlign: 'center', marginTop: '70px' }}>
-          <div style={{ fontSize: '45px', marginBottom: '11px', opacity: 0.3 }}>
+        <div style={{ textAlign: "center", marginTop: "70px" }}>
+          <div style={{ fontSize: "45px", marginBottom: "11px", opacity: 0.3 }}>
             🔍
           </div>
-          <h3 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#334155' }}>
+          <h3
+            style={{
+              fontSize: "13px",
+              fontWeight: "600",
+              marginBottom: "6px",
+              color: "#334155",
+            }}
+          >
             Vlastnosti Zařízení
           </h3>
-          <p style={{ color: '#64748b', fontSize: '10px', lineHeight: '1.5' }}>
+          <p style={{ color: "#64748b", fontSize: "10px", lineHeight: "1.5" }}>
             Vyber zařízení na canvasu pro zobrazení a úpravu vlastností
           </p>
         </div>
@@ -92,15 +104,15 @@ export default function PropertiesPanel() {
 
   const handleAddInterface = () => {
     const deviceType = selectedNode.data.type;
-    let interfaceName = 'Eth0';
-    
-    if (deviceType === 'router') {
+    let interfaceName = "Eth0";
+
+    if (deviceType === "router") {
       const count = selectedNode.data.interfaces.length;
       interfaceName = `Gig0/${count}`;
-    } else if (deviceType === 'switch') {
+    } else if (deviceType === "switch") {
       const count = selectedNode.data.interfaces.length;
       interfaceName = `Fa0/${count + 1}`;
-    } else if (deviceType === 'pc' || deviceType === 'server') {
+    } else if (deviceType === "pc" || deviceType === "server") {
       interfaceName = `Eth${selectedNode.data.interfaces.length}`;
     }
 
@@ -108,11 +120,11 @@ export default function PropertiesPanel() {
       ...selectedNode.data.interfaces,
       {
         name: interfaceName,
-        ipAddress: '',
-        subnetMask: '',
-        ipv6Address: '',
-        gateway: '',
-      }
+        ipAddress: "",
+        subnetMask: "",
+        ipv6Address: "",
+        gateway: "",
+      },
     ];
 
     updateNode(selectedNode.id, { interfaces: newInterfaces });
@@ -124,35 +136,46 @@ export default function PropertiesPanel() {
       ...newInterfaces[index],
       ipAddress: ipv4,
       subnetMask: subnet,
-      ipv6Address: ipv6,
       gateway: gateway,
+      ipv6Address: ipv6,
+      ipv6PrefixLength: parseInt(ipv6Prefix) || 64,
+      ipv6Gateway: ipv6Gateway,
+      ipv6Enabled: ipv6Enabled,
     };
 
     updateNode(selectedNode.id, { interfaces: newInterfaces });
     setEditingInterface(null);
-    setIpv4('');
-    setSubnet('');
-    setIpv6('');
-    setGateway('');
+    setIpv4("");
+    setSubnet("");
+    setGateway("");
+    setIpv6("");
+    setIpv6Prefix("64");
+    setIpv6Gateway("");
+    setIpv6Enabled(false);
   };
 
   const handleEditInterface = (index: number) => {
     const iface = selectedNode.data.interfaces[index];
     setEditingInterface(index);
-    setIpv4(iface.ipAddress || '');
-    setSubnet(iface.subnetMask || '');
-    setIpv6(iface.ipv6Address || '');
-    setGateway(iface.gateway || '');
+    setIpv4(iface.ipAddress || "");
+    setSubnet(iface.subnetMask || "");
+    setGateway(iface.gateway || "");
+    setIpv6(iface.ipv6Address || "");
+    setIpv6Prefix((iface.ipv6PrefixLength || 64).toString());
+    setIpv6Gateway(iface.ipv6Gateway || "");
+    setIpv6Enabled(iface.ipv6Enabled || false);
   };
 
   const handleDeleteInterface = (index: number) => {
-    const newInterfaces = selectedNode.data.interfaces.filter((_, i) => i !== index);
+    const newInterfaces = selectedNode.data.interfaces.filter(
+      (_, i) => i !== index
+    );
     updateNode(selectedNode.id, { interfaces: newInterfaces });
   };
 
   const handleAddRoute = () => {
     if (!routeNetwork || !routeMask || !routeNextHop) {
-      alert('Vyplň všechna povinná pole!');
+      alert("Vyplň všechna povinná pole!");
       return;
     }
 
@@ -163,26 +186,28 @@ export default function PropertiesPanel() {
         mask: routeMask,
         nextHop: routeNextHop,
         metric: parseInt(routeMetric) || 1,
-        protocol: 'static' as const,
-      }
+        protocol: "static" as const,
+      },
     ];
 
     updateNode(selectedNode.id, { routingTable: newRoutes });
-    setRouteNetwork('');
-    setRouteMask('');
-    setRouteNextHop('');
-    setRouteMetric('1');
+    setRouteNetwork("");
+    setRouteMask("");
+    setRouteNextHop("");
+    setRouteMetric("1");
     setShowAddRoute(false);
   };
 
   const handleDeleteRoute = (index: number) => {
-    const newRoutes = (selectedNode.data.routingTable || []).filter((_, i) => i !== index);
+    const newRoutes = (selectedNode.data.routingTable || []).filter(
+      (_, i) => i !== index
+    );
     updateNode(selectedNode.id, { routingTable: newRoutes });
   };
 
   const handleAddDhcpPool = () => {
     if (!dhcpName || !dhcpNetwork || !dhcpMask) {
-      alert('Vyplň povinná pole (Name, Network, Mask)!');
+      alert("Vyplň povinná pole (Name, Network, Mask)!");
       return;
     }
 
@@ -195,26 +220,31 @@ export default function PropertiesPanel() {
         defaultRouter: dhcpRouter,
         dnsServer: dhcpDns,
         leaseTime: 86400, // 24 hours
-      }
+      },
     ];
 
     updateNode(selectedNode.id, { dhcpPools: newPools, isDhcpServer: true });
-    setDhcpName('');
-    setDhcpNetwork('');
-    setDhcpMask('');
-    setDhcpRouter('');
-    setDhcpDns('');
+    setDhcpName("");
+    setDhcpNetwork("");
+    setDhcpMask("");
+    setDhcpRouter("");
+    setDhcpDns("");
     setShowAddDhcp(false);
   };
 
   const handleDeleteDhcpPool = (index: number) => {
-    const newPools = (selectedNode.data.dhcpPools || []).filter((_, i) => i !== index);
-    updateNode(selectedNode.id, { dhcpPools: newPools, isDhcpServer: newPools.length > 0 });
+    const newPools = (selectedNode.data.dhcpPools || []).filter(
+      (_, i) => i !== index
+    );
+    updateNode(selectedNode.id, {
+      dhcpPools: newPools,
+      isDhcpServer: newPools.length > 0,
+    });
   };
 
   const handleAddDnsRecord = () => {
     if (!dnsHostname || !dnsIpAddress) {
-      alert('Vyplň hostname a IP adresu!');
+      alert("Vyplň hostname a IP adresu!");
       return;
     }
 
@@ -224,82 +254,92 @@ export default function PropertiesPanel() {
         hostname: dnsHostname,
         ipAddress: dnsIpAddress,
         type: dnsType,
-      }
+      },
     ];
 
     updateNode(selectedNode.id, { dnsRecords: newRecords, isDnsServer: true });
-    setDnsHostname('');
-    setDnsIpAddress('');
-    setDnsType('A');
+    setDnsHostname("");
+    setDnsIpAddress("");
+    setDnsType("A");
     setShowAddDns(false);
   };
 
   const handleDeleteDnsRecord = (index: number) => {
-    const newRecords = (selectedNode.data.dnsRecords || []).filter((_, i) => i !== index);
-    updateNode(selectedNode.id, { dnsRecords: newRecords, isDnsServer: newRecords.length > 0 });
+    const newRecords = (selectedNode.data.dnsRecords || []).filter(
+      (_, i) => i !== index
+    );
+    updateNode(selectedNode.id, {
+      dnsRecords: newRecords,
+      isDnsServer: newRecords.length > 0,
+    });
   };
 
   const handleAddVlan = () => {
     const id = parseInt(vlanId);
     if (!id || id < 1 || id > 4094) {
-      alert('VLAN ID musí být mezi 1 a 4094');
+      alert("VLAN ID musí být mezi 1 a 4094");
       return;
     }
-    
+
     const vlans = selectedNode.data.vlans || [];
-    if (vlans.find(v => v.id === id)) {
+    if (vlans.find((v) => v.id === id)) {
       alert(`VLAN ${id} již existuje`);
       return;
     }
-    
-    const newVlans = [...vlans, { id, name: vlanName || `VLAN${id}`, ports: [] }];
+
+    const newVlans = [
+      ...vlans,
+      { id, name: vlanName || `VLAN${id}`, ports: [] },
+    ];
     updateNode(selectedNode.id, { vlans: newVlans });
-    setVlanId('');
-    setVlanName('');
+    setVlanId("");
+    setVlanName("");
     setShowAddVlan(false);
   };
 
   const handleDeleteVlan = (vlanIdToDelete: number) => {
     if (vlanIdToDelete === 1) {
-      alert('Nelze smazat výchozí VLAN 1');
+      alert("Nelze smazat výchozí VLAN 1");
       return;
     }
-    const newVlans = (selectedNode.data.vlans || []).filter(v => v.id !== vlanIdToDelete);
+    const newVlans = (selectedNode.data.vlans || []).filter(
+      (v) => v.id !== vlanIdToDelete
+    );
     updateNode(selectedNode.id, { vlans: newVlans });
   };
 
   const handleEditPort = (portName: string) => {
     setEditingPort(portName);
-    const iface = selectedNode.data.interfaces.find(i => i.name === portName);
+    const iface = selectedNode.data.interfaces.find((i) => i.name === portName);
     setPortVlan((iface?.vlanId || 1).toString());
   };
 
   const handleSavePortConfig = () => {
     if (!editingPort) return;
-    
+
     const vlanIdNum = parseInt(portVlan);
     const vlans = selectedNode.data.vlans || [];
-    
+
     // Remove port from all VLANs first
-    const updatedVlans = vlans.map(vlan => ({
+    const updatedVlans = vlans.map((vlan) => ({
       ...vlan,
-      ports: vlan.ports.filter(p => p !== editingPort)
+      ports: vlan.ports.filter((p) => p !== editingPort),
     }));
-    
+
     // Add port to selected VLAN
-    const targetVlan = updatedVlans.find(v => v.id === vlanIdNum);
+    const targetVlan = updatedVlans.find((v) => v.id === vlanIdNum);
     if (targetVlan) {
       targetVlan.ports.push(editingPort);
     }
-    
+
     // Update interface with VLAN info
-    const interfaces = selectedNode.data.interfaces.map(iface => {
+    const interfaces = selectedNode.data.interfaces.map((iface) => {
       if (iface.name === editingPort) {
         return { ...iface, vlanId: vlanIdNum };
       }
       return iface;
     });
-    
+
     updateNode(selectedNode.id, { vlans: updatedVlans, interfaces });
     setEditingPort(null);
   };
@@ -307,19 +347,19 @@ export default function PropertiesPanel() {
   // Sub-interface handlers for routers
   const handleAddSubInterface = (interfaceIndex: number) => {
     if (!subInterfaceName || !subInterfaceVlan) {
-      alert('Vyplň jméno sub-interface a VLAN ID!');
+      alert("Vyplň jméno sub-interface a VLAN ID!");
       return;
     }
 
     const vlanId = parseInt(subInterfaceVlan);
     if (isNaN(vlanId) || vlanId < 1 || vlanId > 4094) {
-      alert('VLAN ID musí být mezi 1 a 4094');
+      alert("VLAN ID musí být mezi 1 a 4094");
       return;
     }
 
     const newInterfaces = [...selectedNode.data.interfaces];
     const parentInterface = newInterfaces[interfaceIndex];
-    
+
     const newSubInterface = {
       name: subInterfaceName,
       vlanId: vlanId,
@@ -333,8 +373,12 @@ export default function PropertiesPanel() {
     }
 
     // Check if sub-interface already exists
-    if (parentInterface.subInterfaces.find(si => si.name === subInterfaceName || si.vlanId === vlanId)) {
-      alert('Sub-interface s tímto jménem nebo VLAN ID již existuje!');
+    if (
+      parentInterface.subInterfaces.find(
+        (si) => si.name === subInterfaceName || si.vlanId === vlanId
+      )
+    ) {
+      alert("Sub-interface s tímto jménem nebo VLAN ID již existuje!");
       return;
     }
 
@@ -342,23 +386,28 @@ export default function PropertiesPanel() {
     parentInterface.trunkMode = true; // Automatically enable trunk mode
 
     updateNode(selectedNode.id, { interfaces: newInterfaces });
-    
+
     // Reset form
-    setSubInterfaceName('');
-    setSubInterfaceVlan('');
-    setSubInterfaceIp('');
-    setSubInterfaceMask('');
-    setSubInterfaceDesc('');
+    setSubInterfaceName("");
+    setSubInterfaceVlan("");
+    setSubInterfaceIp("");
+    setSubInterfaceMask("");
+    setSubInterfaceDesc("");
     setShowAddSubInterface(null);
   };
 
-  const handleDeleteSubInterface = (interfaceIndex: number, subInterfaceIndex: number) => {
+  const handleDeleteSubInterface = (
+    interfaceIndex: number,
+    subInterfaceIndex: number
+  ) => {
     const newInterfaces = [...selectedNode.data.interfaces];
     const parentInterface = newInterfaces[interfaceIndex];
-    
+
     if (parentInterface.subInterfaces) {
-      parentInterface.subInterfaces = parentInterface.subInterfaces.filter((_, idx) => idx !== subInterfaceIndex);
-      
+      parentInterface.subInterfaces = parentInterface.subInterfaces.filter(
+        (_, idx) => idx !== subInterfaceIndex
+      );
+
       // Disable trunk mode if no sub-interfaces remain
       if (parentInterface.subInterfaces.length === 0) {
         parentInterface.trunkMode = false;
@@ -372,9 +421,9 @@ export default function PropertiesPanel() {
   const handleToggleTrunkMode = (interfaceIndex: number) => {
     const newInterfaces = [...selectedNode.data.interfaces];
     const iface = newInterfaces[interfaceIndex];
-    
+
     iface.trunkMode = !iface.trunkMode;
-    
+
     if (iface.trunkMode) {
       // Initialize trunk settings
       if (!iface.allowedVlans || iface.allowedVlans.length === 0) {
@@ -395,7 +444,7 @@ export default function PropertiesPanel() {
   const handleSaveTrunkConfig = (interfaceIndex: number) => {
     const newInterfaces = [...selectedNode.data.interfaces];
     const iface = newInterfaces[interfaceIndex];
-    
+
     iface.allowedVlans = trunkAllowedVlans;
     iface.nativeVlan = parseInt(trunkNativeVlan) || 1;
 
@@ -405,9 +454,11 @@ export default function PropertiesPanel() {
 
   const handleToggleVlanInTrunk = (vlanId: number) => {
     if (trunkAllowedVlans.includes(vlanId)) {
-      setTrunkAllowedVlans(trunkAllowedVlans.filter(v => v !== vlanId));
+      setTrunkAllowedVlans(trunkAllowedVlans.filter((v) => v !== vlanId));
     } else {
-      setTrunkAllowedVlans([...trunkAllowedVlans, vlanId].sort((a, b) => a - b));
+      setTrunkAllowedVlans(
+        [...trunkAllowedVlans, vlanId].sort((a, b) => a - b)
+      );
     }
   };
 
@@ -419,49 +470,61 @@ export default function PropertiesPanel() {
   };
 
   const deviceTypeLabels: Record<string, string> = {
-    router: '⚡ Router',
-    switch: '🔀 Switch',
-    pc: '💻 PC',
-    server: '🖥️ Server',
-    hub: '⭐ Hub',
+    router: "⚡ Router",
+    switch: "🔀 Switch",
+    pc: "💻 PC",
+    server: "🖥️ Server",
+    hub: "⭐ Hub",
   };
 
   return (
     <div
       style={{
-        width: '20vw',
-        minWidth: '300px',
-        maxWidth: '400px',
-        background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
-        padding: '17px',
-        height: '100vh',
-        borderLeft: '1px solid #e2e8f0',
-        overflowY: 'auto',
+        width: "20vw",
+        minWidth: "300px",
+        maxWidth: "400px",
+        background: "linear-gradient(to bottom, #f8fafc, #f1f5f9)",
+        padding: "17px",
+        height: "100vh",
+        borderLeft: "1px solid #e2e8f0",
+        overflowY: "auto",
       }}
     >
-      <div style={{ marginBottom: '17px' }}>
-        <div style={{ fontSize: '8px', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+      <div style={{ marginBottom: "17px" }}>
+        <div
+          style={{
+            fontSize: "8px",
+            color: "#64748b",
+            marginBottom: "6px",
+            textTransform: "uppercase",
+            letterSpacing: "0.4px",
+          }}
+        >
           Vybrané Zařízení
         </div>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>
+        <h3 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a" }}>
           {deviceTypeLabels[selectedNode.data.type] || selectedNode.data.type}
         </h3>
       </div>
 
-      <div style={{ 
-        background: 'white', 
-        borderRadius: '8px', 
-        padding: '14px',
-        marginBottom: '11px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-      }}>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '9px', 
-          fontWeight: '600', 
-          marginBottom: '6px',
-          color: '#334155',
-        }}>
+      <div
+        style={{
+          background: "white",
+          borderRadius: "8px",
+          padding: "14px",
+          marginBottom: "11px",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
+        <label
+          style={{
+            display: "block",
+            fontSize: "9px",
+            fontWeight: "600",
+            marginBottom: "6px",
+            color: "#334155",
+          }}
+        >
           Název Zařízení
         </label>
         <input
@@ -469,134 +532,151 @@ export default function PropertiesPanel() {
           value={selectedNode.data.label}
           onChange={handleNameChange}
           style={{
-            width: '100%',
-            padding: '7px 8px',
-            borderRadius: '6px',
-            border: '1.5px solid #e2e8f0',
-            fontSize: '10px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            outline: 'none',
+            width: "100%",
+            padding: "7px 8px",
+            borderRadius: "6px",
+            border: "1.5px solid #e2e8f0",
+            fontSize: "10px",
+            fontWeight: "500",
+            transition: "all 0.2s",
+            outline: "none",
           }}
           onFocus={(e) => {
-            e.target.style.borderColor = '#3b82f6';
+            e.target.style.borderColor = "#3b82f6";
           }}
           onBlur={(e) => {
-            e.target.style.borderColor = '#e2e8f0';
+            e.target.style.borderColor = "#e2e8f0";
           }}
         />
       </div>
 
-      <div style={{ 
-        background: 'white', 
-        borderRadius: '8px', 
-        padding: '14px',
-        marginBottom: '11px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-      }}>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '9px', 
-          fontWeight: '600', 
-          marginBottom: '6px',
-          color: '#334155',
-        }}>
+      <div
+        style={{
+          background: "white",
+          borderRadius: "8px",
+          padding: "14px",
+          marginBottom: "11px",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
+        <label
+          style={{
+            display: "block",
+            fontSize: "9px",
+            fontWeight: "600",
+            marginBottom: "6px",
+            color: "#334155",
+          }}
+        >
           Typ Zařízení
         </label>
-        <div style={{
-          padding: '7px 8px',
-          borderRadius: '6px',
-          background: '#f1f5f9',
-          fontSize: '10px',
-          fontWeight: '500',
-          color: '#64748b',
-        }}>
+        <div
+          style={{
+            padding: "7px 8px",
+            borderRadius: "6px",
+            background: "#f1f5f9",
+            fontSize: "10px",
+            fontWeight: "500",
+            color: "#64748b",
+          }}
+        >
           {selectedNode.data.type.toUpperCase()}
         </div>
       </div>
 
-      <div style={{ 
-        background: 'white', 
-        borderRadius: '8px', 
-        padding: '14px',
-        marginBottom: '11px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-      }}>
-        <div style={{ 
-          fontSize: '9px', 
-          fontWeight: '600', 
-          marginBottom: '8px',
-          color: '#334155',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div
+        style={{
+          background: "white",
+          borderRadius: "8px",
+          padding: "14px",
+          marginBottom: "11px",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "9px",
+            fontWeight: "600",
+            marginBottom: "8px",
+            color: "#334155",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span>🔌</span>
             <span>Rozhraní</span>
           </div>
           <button
             onClick={handleAddInterface}
             style={{
-              padding: '3px 6px',
-              background: '#3b82f6',
-              border: 'none',
-              borderRadius: '4px',
-              color: 'white',
-              fontSize: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
+              padding: "3px 6px",
+              background: "#3b82f6",
+              border: "none",
+              borderRadius: "4px",
+              color: "white",
+              fontSize: "8px",
+              cursor: "pointer",
+              fontWeight: "600",
             }}
           >
             + Přidat
           </button>
         </div>
         {selectedNode.data.interfaces.length === 0 ? (
-          <div style={{ 
-            padding: '11px', 
-            background: '#f8fafc',
-            borderRadius: '6px',
-            textAlign: 'center',
-            color: '#64748b',
-            fontSize: '9px',
-          }}>
+          <div
+            style={{
+              padding: "11px",
+              background: "#f8fafc",
+              borderRadius: "6px",
+              textAlign: "center",
+              color: "#64748b",
+              fontSize: "9px",
+            }}
+          >
             Žádná rozhraní nakonfigurována
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             {selectedNode.data.interfaces.map((iface, idx) => (
               <div
                 key={idx}
                 style={{
-                  padding: '8px',
-                  background: editingInterface === idx ? '#eff6ff' : '#f8fafc',
-                  borderRadius: '6px',
-                  fontSize: '9px',
-                  border: editingInterface === idx ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
+                  padding: "8px",
+                  background: editingInterface === idx ? "#eff6ff" : "#f8fafc",
+                  borderRadius: "6px",
+                  fontSize: "9px",
+                  border:
+                    editingInterface === idx
+                      ? "1.5px solid #3b82f6"
+                      : "1px solid #e2e8f0",
                 }}
               >
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  marginBottom: editingInterface === idx ? '6px' : '3px',
-                }}>
-                  <div style={{ fontWeight: '600', color: '#0f172a' }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: editingInterface === idx ? "6px" : "3px",
+                  }}
+                >
+                  <div style={{ fontWeight: "600", color: "#0f172a" }}>
                     {iface.name}
                   </div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
+                  <div style={{ display: "flex", gap: "4px" }}>
                     {editingInterface !== idx && (
                       <>
                         <button
                           onClick={() => handleEditInterface(idx)}
                           style={{
-                            padding: '2px 5px',
-                            background: '#3b82f6',
-                            border: 'none',
-                            borderRadius: '3px',
-                            color: 'white',
-                            fontSize: '7px',
-                            cursor: 'pointer',
+                            padding: "2px 5px",
+                            background: "#3b82f6",
+                            border: "none",
+                            borderRadius: "3px",
+                            color: "white",
+                            fontSize: "7px",
+                            cursor: "pointer",
                           }}
                         >
                           ✏️
@@ -604,13 +684,13 @@ export default function PropertiesPanel() {
                         <button
                           onClick={() => handleDeleteInterface(idx)}
                           style={{
-                            padding: '2px 5px',
-                            background: '#ef4444',
-                            border: 'none',
-                            borderRadius: '3px',
-                            color: 'white',
-                            fontSize: '7px',
-                            cursor: 'pointer',
+                            padding: "2px 5px",
+                            background: "#ef4444",
+                            border: "none",
+                            borderRadius: "3px",
+                            color: "white",
+                            fontSize: "7px",
+                            cursor: "pointer",
                           }}
                         >
                           🗑️
@@ -621,9 +701,22 @@ export default function PropertiesPanel() {
                 </div>
 
                 {editingInterface === idx ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "5px",
+                    }}
+                  >
                     <div>
-                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                      <label
+                        style={{
+                          fontSize: "7px",
+                          color: "#64748b",
+                          display: "block",
+                          marginBottom: "2px",
+                        }}
+                      >
                         IPv4 Adresa
                       </label>
                       <input
@@ -632,16 +725,23 @@ export default function PropertiesPanel() {
                         onChange={(e) => setIpv4(e.target.value)}
                         placeholder="192.168.1.1"
                         style={{
-                          width: '100%',
-                          padding: '4px 6px',
-                          borderRadius: '4px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '8px',
+                          width: "100%",
+                          padding: "4px 6px",
+                          borderRadius: "4px",
+                          border: "1px solid #cbd5e1",
+                          fontSize: "8px",
                         }}
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                      <label
+                        style={{
+                          fontSize: "7px",
+                          color: "#64748b",
+                          display: "block",
+                          marginBottom: "2px",
+                        }}
+                      >
                         Subnet Maska
                       </label>
                       <input
@@ -650,35 +750,24 @@ export default function PropertiesPanel() {
                         onChange={(e) => setSubnet(e.target.value)}
                         placeholder="255.255.255.0"
                         style={{
-                          width: '100%',
-                          padding: '4px 6px',
-                          borderRadius: '4px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '8px',
+                          width: "100%",
+                          padding: "4px 6px",
+                          borderRadius: "4px",
+                          border: "1px solid #cbd5e1",
+                          fontSize: "8px",
                         }}
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
-                        IPv6 Adresa
-                      </label>
-                      <input
-                        type="text"
-                        value={ipv6}
-                        onChange={(e) => setIpv6(e.target.value)}
-                        placeholder="2001:db8::1"
+                      <label
                         style={{
-                          width: '100%',
-                          padding: '4px 6px',
-                          borderRadius: '4px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '8px',
+                          fontSize: "7px",
+                          color: "#64748b",
+                          display: "block",
+                          marginBottom: "2px",
                         }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
-                        Default Gateway
+                      >
+                        IPv4 Default Gateway
                       </label>
                       <input
                         type="text"
@@ -686,34 +775,167 @@ export default function PropertiesPanel() {
                         onChange={(e) => setGateway(e.target.value)}
                         placeholder="192.168.1.254"
                         style={{
-                          width: '100%',
-                          padding: '4px 6px',
-                          borderRadius: '4px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '8px',
+                          width: "100%",
+                          padding: "4px 6px",
+                          borderRadius: "4px",
+                          border: "1px solid #cbd5e1",
+                          fontSize: "8px",
                         }}
                       />
                     </div>
+
+                    {/* IPv6 Configuration */}
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        paddingTop: "8px",
+                        borderTop: "1px solid #e2e8f0",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          id={`ipv6-enabled-${idx}`}
+                          checked={ipv6Enabled}
+                          onChange={(e) => setIpv6Enabled(e.target.checked)}
+                          style={{ cursor: "pointer" }}
+                        />
+                        <label
+                          htmlFor={`ipv6-enabled-${idx}`}
+                          style={{
+                            fontSize: "7px",
+                            color: "#64748b",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Povolit IPv6
+                        </label>
+                      </div>
+
+                      {ipv6Enabled && (
+                        <>
+                          <div style={{ marginBottom: "5px" }}>
+                            <label
+                              style={{
+                                fontSize: "7px",
+                                color: "#64748b",
+                                display: "block",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              IPv6 Adresa
+                            </label>
+                            <input
+                              type="text"
+                              value={ipv6}
+                              onChange={(e) => setIpv6(e.target.value)}
+                              placeholder="2001:db8::1"
+                              style={{
+                                width: "100%",
+                                padding: "4px 6px",
+                                borderRadius: "4px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "8px",
+                              }}
+                            />
+                          </div>
+                          <div style={{ marginBottom: "5px" }}>
+                            <label
+                              style={{
+                                fontSize: "7px",
+                                color: "#64748b",
+                                display: "block",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              Prefix Length
+                            </label>
+                            <input
+                              type="text"
+                              value={ipv6Prefix}
+                              onChange={(e) => setIpv6Prefix(e.target.value)}
+                              placeholder="64"
+                              style={{
+                                width: "100%",
+                                padding: "4px 6px",
+                                borderRadius: "4px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "8px",
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label
+                              style={{
+                                fontSize: "7px",
+                                color: "#64748b",
+                                display: "block",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              IPv6 Default Gateway
+                            </label>
+                            <input
+                              type="text"
+                              value={ipv6Gateway}
+                              onChange={(e) => setIpv6Gateway(e.target.value)}
+                              placeholder="2001:db8::ffff"
+                              style={{
+                                width: "100%",
+                                padding: "4px 6px",
+                                borderRadius: "4px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "8px",
+                              }}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+
                     <div>
-                      <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                      <label
+                        style={{
+                          fontSize: "7px",
+                          color: "#64748b",
+                          display: "block",
+                          marginBottom: "2px",
+                        }}
+                      >
                         Pozice Portu
                       </label>
                       <select
-                        value={iface.position || 'left'}
+                        value={iface.position || "left"}
                         onChange={(e) => {
-                          const newInterfaces = [...selectedNode.data.interfaces];
+                          const newInterfaces = [
+                            ...selectedNode.data.interfaces,
+                          ];
                           newInterfaces[idx] = {
                             ...newInterfaces[idx],
-                            position: e.target.value as 'left' | 'right' | 'top' | 'bottom',
+                            position: e.target.value as
+                              | "left"
+                              | "right"
+                              | "top"
+                              | "bottom",
                           };
-                          updateNode(selectedNode.id, { interfaces: newInterfaces });
+                          updateNode(selectedNode.id, {
+                            interfaces: newInterfaces,
+                          });
                         }}
                         style={{
-                          width: '100%',
-                          padding: '4px 6px',
-                          borderRadius: '4px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '8px',
+                          width: "100%",
+                          padding: "4px 6px",
+                          borderRadius: "4px",
+                          border: "1px solid #cbd5e1",
+                          fontSize: "8px",
                         }}
                       >
                         <option value="left">⬅️ Vlevo</option>
@@ -722,19 +944,21 @@ export default function PropertiesPanel() {
                         <option value="bottom">⬇️ Dole</option>
                       </select>
                     </div>
-                    <div style={{ display: 'flex', gap: '4px', marginTop: '3px' }}>
+                    <div
+                      style={{ display: "flex", gap: "4px", marginTop: "3px" }}
+                    >
                       <button
                         onClick={() => handleSaveInterface(idx)}
                         style={{
                           flex: 1,
-                          padding: '4px',
-                          background: '#10b981',
-                          border: 'none',
-                          borderRadius: '4px',
-                          color: 'white',
-                          fontSize: '8px',
-                          cursor: 'pointer',
-                          fontWeight: '600',
+                          padding: "4px",
+                          background: "#10b981",
+                          border: "none",
+                          borderRadius: "4px",
+                          color: "white",
+                          fontSize: "8px",
+                          cursor: "pointer",
+                          fontWeight: "600",
                         }}
                       >
                         💾 Uložit
@@ -743,14 +967,14 @@ export default function PropertiesPanel() {
                         onClick={() => setEditingInterface(null)}
                         style={{
                           flex: 1,
-                          padding: '4px',
-                          background: '#6b7280',
-                          border: 'none',
-                          borderRadius: '4px',
-                          color: 'white',
-                          fontSize: '8px',
-                          cursor: 'pointer',
-                          fontWeight: '600',
+                          padding: "4px",
+                          background: "#6b7280",
+                          border: "none",
+                          borderRadius: "4px",
+                          color: "white",
+                          fontSize: "8px",
+                          cursor: "pointer",
+                          fontWeight: "600",
                         }}
                       >
                         ✖️ Zrušit
@@ -760,194 +984,305 @@ export default function PropertiesPanel() {
                 ) : (
                   <>
                     {iface.ipAddress && (
-                      <div style={{ color: '#64748b', fontSize: '8px', marginBottom: '2px' }}>
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: "8px",
+                          marginBottom: "2px",
+                        }}
+                      >
                         IPv4: {iface.ipAddress}/{iface.subnetMask}
                       </div>
                     )}
                     {iface.ipv6Address && (
-                      <div style={{ color: '#64748b', fontSize: '8px', marginBottom: '2px' }}>
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: "8px",
+                          marginBottom: "2px",
+                        }}
+                      >
                         IPv6: {iface.ipv6Address}
                       </div>
                     )}
                     {iface.gateway && (
-                      <div style={{ color: '#64748b', fontSize: '8px', marginBottom: '2px' }}>
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: "8px",
+                          marginBottom: "2px",
+                        }}
+                      >
                         Gateway: {iface.gateway}
                       </div>
                     )}
                     {iface.trunkMode && (
-                      <div style={{ color: '#8b5cf6', fontSize: '8px', fontWeight: '600', marginBottom: '2px' }}>
+                      <div
+                        style={{
+                          color: "#8b5cf6",
+                          fontSize: "8px",
+                          fontWeight: "600",
+                          marginBottom: "2px",
+                        }}
+                      >
                         🔀 802.1Q Trunk
                       </div>
                     )}
-                    {selectedNode.data.type === 'switch' && iface.vlanId && !iface.trunkMode && (
-                      <div style={{ color: '#0ea5e9', fontSize: '8px', fontWeight: '600' }}>
-                        VLAN {iface.vlanId} (Access)
-                      </div>
-                    )}
+                    {selectedNode.data.type === "switch" &&
+                      iface.vlanId &&
+                      !iface.trunkMode && (
+                        <div
+                          style={{
+                            color: "#0ea5e9",
+                            fontSize: "8px",
+                            fontWeight: "600",
+                          }}
+                        >
+                          VLAN {iface.vlanId} (Access)
+                        </div>
+                      )}
                     {iface.description && (
-                      <div style={{ color: '#94a3b8', fontSize: '7px', fontStyle: 'italic', marginTop: '2px' }}>
+                      <div
+                        style={{
+                          color: "#94a3b8",
+                          fontSize: "7px",
+                          fontStyle: "italic",
+                          marginTop: "2px",
+                        }}
+                      >
                         {iface.description}
                       </div>
                     )}
-                    {!iface.ipAddress && !iface.ipv6Address && !iface.trunkMode && selectedNode.data.type !== 'switch' && (
-                      <div style={{ color: '#94a3b8', fontSize: '8px', fontStyle: 'italic' }}>
-                        Nekonfigurováno
-                      </div>
-                    )}
-                    
-                    {/* Sub-interfaces (pro routery s trunk porty) */}
-                    {selectedNode.data.type === 'router' && iface.subInterfaces && iface.subInterfaces.length > 0 && (
-                      <div style={{ 
-                        marginTop: '6px', 
-                        paddingLeft: '8px', 
-                        borderLeft: '2px solid #8b5cf6',
-                        background: '#f8f9ff',
-                        padding: '4px 6px',
-                        borderRadius: '4px',
-                      }}>
-                        <div style={{ fontSize: '7px', fontWeight: '600', color: '#8b5cf6', marginBottom: '3px' }}>
-                          Sub-interfaces:
+                    {!iface.ipAddress &&
+                      !iface.ipv6Address &&
+                      !iface.trunkMode &&
+                      selectedNode.data.type !== "switch" && (
+                        <div
+                          style={{
+                            color: "#94a3b8",
+                            fontSize: "8px",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          Nekonfigurováno
                         </div>
-                        {iface.subInterfaces.map((subIface, subIdx) => (
-                          <div key={subIdx} style={{ 
-                            fontSize: '7px', 
-                            color: '#475569',
-                            marginBottom: '4px',
-                            paddingLeft: '4px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                          }}>
-                            <div>
-                              <span style={{ fontWeight: '600', color: '#0ea5e9' }}>
-                                {subIface.name}
-                              </span>
-                              {' '}
-                              <span style={{ color: '#94a3b8' }}>
-                                (VLAN {subIface.vlanId})
-                              </span>
-                              {subIface.ipAddress && (
-                                <div style={{ color: '#64748b', fontSize: '7px' }}>
-                                  → {subIface.ipAddress}/{subIface.subnetMask}
-                                </div>
-                              )}
-                              {subIface.description && (
-                                <div style={{ color: '#94a3b8', fontSize: '6px', fontStyle: 'italic' }}>
-                                  {subIface.description}
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => handleDeleteSubInterface(idx, subIdx)}
+                      )}
+
+                    {/* Sub-interfaces (pro routery s trunk porty) */}
+                    {selectedNode.data.type === "router" &&
+                      iface.subInterfaces &&
+                      iface.subInterfaces.length > 0 && (
+                        <div
+                          style={{
+                            marginTop: "6px",
+                            paddingLeft: "8px",
+                            borderLeft: "2px solid #8b5cf6",
+                            background: "#f8f9ff",
+                            padding: "4px 6px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "7px",
+                              fontWeight: "600",
+                              color: "#8b5cf6",
+                              marginBottom: "3px",
+                            }}
+                          >
+                            Sub-interfaces:
+                          </div>
+                          {iface.subInterfaces.map((subIface, subIdx) => (
+                            <div
+                              key={subIdx}
                               style={{
-                                padding: '1px 3px',
-                                background: '#ef4444',
-                                border: 'none',
-                                borderRadius: '2px',
-                                color: 'white',
-                                fontSize: '6px',
-                                cursor: 'pointer',
+                                fontSize: "7px",
+                                color: "#475569",
+                                marginBottom: "4px",
+                                paddingLeft: "4px",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
                               }}
                             >
-                              🗑️
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                              <div>
+                                <span
+                                  style={{
+                                    fontWeight: "600",
+                                    color: "#0ea5e9",
+                                  }}
+                                >
+                                  {subIface.name}
+                                </span>{" "}
+                                <span style={{ color: "#94a3b8" }}>
+                                  (VLAN {subIface.vlanId})
+                                </span>
+                                {subIface.ipAddress && (
+                                  <div
+                                    style={{
+                                      color: "#64748b",
+                                      fontSize: "7px",
+                                    }}
+                                  >
+                                    → {subIface.ipAddress}/{subIface.subnetMask}
+                                  </div>
+                                )}
+                                {subIface.description && (
+                                  <div
+                                    style={{
+                                      color: "#94a3b8",
+                                      fontSize: "6px",
+                                      fontStyle: "italic",
+                                    }}
+                                  >
+                                    {subIface.description}
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleDeleteSubInterface(idx, subIdx)
+                                }
+                                style={{
+                                  padding: "1px 3px",
+                                  background: "#ef4444",
+                                  border: "none",
+                                  borderRadius: "2px",
+                                  color: "white",
+                                  fontSize: "6px",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                     {/* Router: Add Sub-Interface Button */}
-                    {selectedNode.data.type === 'router' && (
-                      <div style={{ marginTop: '6px' }}>
+                    {selectedNode.data.type === "router" && (
+                      <div style={{ marginTop: "6px" }}>
                         {showAddSubInterface === idx ? (
-                          <div style={{
-                            background: '#f0f9ff',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: '1px solid #0ea5e9',
-                          }}>
-                            <div style={{ fontSize: '8px', fontWeight: '600', color: '#0ea5e9', marginBottom: '6px' }}>
+                          <div
+                            style={{
+                              background: "#f0f9ff",
+                              padding: "8px",
+                              borderRadius: "4px",
+                              border: "1px solid #0ea5e9",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "8px",
+                                fontWeight: "600",
+                                color: "#0ea5e9",
+                                marginBottom: "6px",
+                              }}
+                            >
                               ➕ Přidat Sub-Interface
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "4px",
+                              }}
+                            >
                               <input
                                 type="text"
                                 placeholder={`${iface.name}.10`}
                                 value={subInterfaceName}
-                                onChange={(e) => setSubInterfaceName(e.target.value)}
+                                onChange={(e) =>
+                                  setSubInterfaceName(e.target.value)
+                                }
                                 style={{
-                                  width: '100%',
-                                  padding: '4px',
-                                  border: '1px solid #cbd5e1',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
+                                  width: "100%",
+                                  padding: "4px",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
                                 }}
                               />
                               <input
                                 type="text"
                                 placeholder="VLAN ID (10)"
                                 value={subInterfaceVlan}
-                                onChange={(e) => setSubInterfaceVlan(e.target.value)}
+                                onChange={(e) =>
+                                  setSubInterfaceVlan(e.target.value)
+                                }
                                 style={{
-                                  width: '100%',
-                                  padding: '4px',
-                                  border: '1px solid #cbd5e1',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
+                                  width: "100%",
+                                  padding: "4px",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
                                 }}
                               />
                               <input
                                 type="text"
                                 placeholder="IP Address"
                                 value={subInterfaceIp}
-                                onChange={(e) => setSubInterfaceIp(e.target.value)}
+                                onChange={(e) =>
+                                  setSubInterfaceIp(e.target.value)
+                                }
                                 style={{
-                                  width: '100%',
-                                  padding: '4px',
-                                  border: '1px solid #cbd5e1',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
+                                  width: "100%",
+                                  padding: "4px",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
                                 }}
                               />
                               <input
                                 type="text"
                                 placeholder="Subnet Mask"
                                 value={subInterfaceMask}
-                                onChange={(e) => setSubInterfaceMask(e.target.value)}
+                                onChange={(e) =>
+                                  setSubInterfaceMask(e.target.value)
+                                }
                                 style={{
-                                  width: '100%',
-                                  padding: '4px',
-                                  border: '1px solid #cbd5e1',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
+                                  width: "100%",
+                                  padding: "4px",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
                                 }}
                               />
                               <input
                                 type="text"
                                 placeholder="Description (optional)"
                                 value={subInterfaceDesc}
-                                onChange={(e) => setSubInterfaceDesc(e.target.value)}
+                                onChange={(e) =>
+                                  setSubInterfaceDesc(e.target.value)
+                                }
                                 style={{
-                                  width: '100%',
-                                  padding: '4px',
-                                  border: '1px solid #cbd5e1',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
+                                  width: "100%",
+                                  padding: "4px",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
                                 }}
                               />
-                              <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "4px",
+                                  marginTop: "4px",
+                                }}
+                              >
                                 <button
                                   onClick={() => handleAddSubInterface(idx)}
                                   style={{
                                     flex: 1,
-                                    padding: '4px',
-                                    background: '#0ea5e9',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '3px',
-                                    fontSize: '7px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
+                                    padding: "4px",
+                                    background: "#0ea5e9",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "3px",
+                                    fontSize: "7px",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
                                   }}
                                 >
                                   ✓ Přidat
@@ -956,14 +1291,14 @@ export default function PropertiesPanel() {
                                   onClick={() => setShowAddSubInterface(null)}
                                   style={{
                                     flex: 1,
-                                    padding: '4px',
-                                    background: '#94a3b8',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '3px',
-                                    fontSize: '7px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
+                                    padding: "4px",
+                                    background: "#94a3b8",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "3px",
+                                    fontSize: "7px",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
                                   }}
                                 >
                                   ✖ Zrušit
@@ -978,15 +1313,15 @@ export default function PropertiesPanel() {
                               setSubInterfaceName(`${iface.name}.`);
                             }}
                             style={{
-                              width: '100%',
-                              padding: '4px',
-                              background: '#e0f2fe',
-                              color: '#0369a1',
-                              border: '1px dashed #0ea5e9',
-                              borderRadius: '3px',
-                              fontSize: '7px',
-                              cursor: 'pointer',
-                              fontWeight: '600',
+                              width: "100%",
+                              padding: "4px",
+                              background: "#e0f2fe",
+                              color: "#0369a1",
+                              border: "1px dashed #0ea5e9",
+                              borderRadius: "3px",
+                              fontSize: "7px",
+                              cursor: "pointer",
+                              fontWeight: "600",
                             }}
                           >
                             ➕ Sub-Interface
@@ -996,37 +1331,47 @@ export default function PropertiesPanel() {
                     )}
 
                     {/* Switch: Trunk/Access Mode Toggle */}
-                    {selectedNode.data.type === 'switch' && (
-                      <div style={{ marginTop: '6px' }}>
-                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    {selectedNode.data.type === "switch" && (
+                      <div style={{ marginTop: "6px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "4px",
+                            alignItems: "center",
+                          }}
+                        >
                           <button
                             onClick={() => handleToggleTrunkMode(idx)}
                             style={{
                               flex: 1,
-                              padding: '4px',
-                              background: iface.trunkMode ? '#8b5cf6' : '#e2e8f0',
-                              color: iface.trunkMode ? 'white' : '#64748b',
-                              border: 'none',
-                              borderRadius: '3px',
-                              fontSize: '7px',
-                              cursor: 'pointer',
-                              fontWeight: '600',
+                              padding: "4px",
+                              background: iface.trunkMode
+                                ? "#8b5cf6"
+                                : "#e2e8f0",
+                              color: iface.trunkMode ? "white" : "#64748b",
+                              border: "none",
+                              borderRadius: "3px",
+                              fontSize: "7px",
+                              cursor: "pointer",
+                              fontWeight: "600",
                             }}
                           >
-                            {iface.trunkMode ? '🔀 Trunk Mode' : '📌 Access Mode'}
+                            {iface.trunkMode
+                              ? "🔀 Trunk Mode"
+                              : "📌 Access Mode"}
                           </button>
                           {iface.trunkMode && (
                             <button
                               onClick={() => handleConfigureTrunk(idx)}
                               style={{
-                                padding: '4px 6px',
-                                background: '#3b82f6',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '3px',
-                                fontSize: '7px',
-                                cursor: 'pointer',
-                                fontWeight: '600',
+                                padding: "4px 6px",
+                                background: "#3b82f6",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "3px",
+                                fontSize: "7px",
+                                cursor: "pointer",
+                                fontWeight: "600",
                               }}
                             >
                               ⚙️
@@ -1036,85 +1381,122 @@ export default function PropertiesPanel() {
 
                         {/* Trunk Configuration Panel */}
                         {configuringTrunk === idx && iface.trunkMode && (
-                          <div style={{
-                            marginTop: '6px',
-                            background: '#f5f3ff',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: '1px solid #8b5cf6',
-                          }}>
-                            <div style={{ fontSize: '8px', fontWeight: '600', color: '#8b5cf6', marginBottom: '6px' }}>
+                          <div
+                            style={{
+                              marginTop: "6px",
+                              background: "#f5f3ff",
+                              padding: "8px",
+                              borderRadius: "4px",
+                              border: "1px solid #8b5cf6",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "8px",
+                                fontWeight: "600",
+                                color: "#8b5cf6",
+                                marginBottom: "6px",
+                              }}
+                            >
                               ⚙️ Trunk Port Configuration
                             </div>
-                            
-                            <div style={{ marginBottom: '6px' }}>
-                              <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '3px' }}>
+
+                            <div style={{ marginBottom: "6px" }}>
+                              <label
+                                style={{
+                                  fontSize: "7px",
+                                  color: "#64748b",
+                                  display: "block",
+                                  marginBottom: "3px",
+                                }}
+                              >
                                 Native VLAN (Untagged):
                               </label>
                               <input
                                 type="text"
                                 value={trunkNativeVlan}
-                                onChange={(e) => setTrunkNativeVlan(e.target.value)}
+                                onChange={(e) =>
+                                  setTrunkNativeVlan(e.target.value)
+                                }
                                 placeholder="1"
                                 style={{
-                                  width: '100%',
-                                  padding: '4px',
-                                  border: '1px solid #cbd5e1',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
+                                  width: "100%",
+                                  padding: "4px",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
                                 }}
                               />
                             </div>
 
-                            <div style={{ marginBottom: '6px' }}>
-                              <label style={{ fontSize: '7px', color: '#64748b', display: 'block', marginBottom: '3px' }}>
+                            <div style={{ marginBottom: "6px" }}>
+                              <label
+                                style={{
+                                  fontSize: "7px",
+                                  color: "#64748b",
+                                  display: "block",
+                                  marginBottom: "3px",
+                                }}
+                              >
                                 Allowed VLANs (Tagged):
                               </label>
-                              <div style={{
-                                maxHeight: '100px',
-                                overflowY: 'auto',
-                                background: 'white',
-                                padding: '4px',
-                                borderRadius: '3px',
-                                border: '1px solid #cbd5e1',
-                              }}>
-                                {(selectedNode.data.vlans || [{ id: 1, name: 'default', ports: [] }]).map(vlan => (
+                              <div
+                                style={{
+                                  maxHeight: "100px",
+                                  overflowY: "auto",
+                                  background: "white",
+                                  padding: "4px",
+                                  borderRadius: "3px",
+                                  border: "1px solid #cbd5e1",
+                                }}
+                              >
+                                {(
+                                  selectedNode.data.vlans || [
+                                    { id: 1, name: "default", ports: [] },
+                                  ]
+                                ).map((vlan) => (
                                   <label
                                     key={vlan.id}
                                     style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '4px',
-                                      padding: '2px',
-                                      fontSize: '7px',
-                                      cursor: 'pointer',
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "4px",
+                                      padding: "2px",
+                                      fontSize: "7px",
+                                      cursor: "pointer",
                                     }}
                                   >
                                     <input
                                       type="checkbox"
-                                      checked={trunkAllowedVlans.includes(vlan.id)}
-                                      onChange={() => handleToggleVlanInTrunk(vlan.id)}
-                                      style={{ cursor: 'pointer' }}
+                                      checked={trunkAllowedVlans.includes(
+                                        vlan.id
+                                      )}
+                                      onChange={() =>
+                                        handleToggleVlanInTrunk(vlan.id)
+                                      }
+                                      style={{ cursor: "pointer" }}
                                     />
-                                    <span>VLAN {vlan.id} - {vlan.name}</span>
+                                    <span>
+                                      VLAN {vlan.id} - {vlan.name}
+                                    </span>
                                   </label>
                                 ))}
                               </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '4px' }}>
+                            <div style={{ display: "flex", gap: "4px" }}>
                               <button
                                 onClick={() => handleSaveTrunkConfig(idx)}
                                 style={{
                                   flex: 1,
-                                  padding: '4px',
-                                  background: '#8b5cf6',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
-                                  cursor: 'pointer',
-                                  fontWeight: '600',
+                                  padding: "4px",
+                                  background: "#8b5cf6",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
+                                  cursor: "pointer",
+                                  fontWeight: "600",
                                 }}
                               >
                                 ✓ Uložit
@@ -1123,14 +1505,14 @@ export default function PropertiesPanel() {
                                 onClick={() => setConfiguringTrunk(null)}
                                 style={{
                                   flex: 1,
-                                  padding: '4px',
-                                  background: '#94a3b8',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '3px',
-                                  fontSize: '7px',
-                                  cursor: 'pointer',
-                                  fontWeight: '600',
+                                  padding: "4px",
+                                  background: "#94a3b8",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "3px",
+                                  fontSize: "7px",
+                                  cursor: "pointer",
+                                  fontWeight: "600",
                                 }}
                               >
                                 ✖ Zrušit
@@ -1140,23 +1522,32 @@ export default function PropertiesPanel() {
                         )}
 
                         {/* Display allowed VLANs on trunk */}
-                        {iface.trunkMode && iface.allowedVlans && iface.allowedVlans.length > 0 && (
-                          <div style={{
-                            marginTop: '4px',
-                            fontSize: '7px',
-                            color: '#64748b',
-                            background: '#f8fafc',
-                            padding: '4px',
-                            borderRadius: '3px',
-                          }}>
-                            <div style={{ fontWeight: '600', marginBottom: '2px' }}>
-                              Allowed VLANs: {iface.allowedVlans.join(', ')}
+                        {iface.trunkMode &&
+                          iface.allowedVlans &&
+                          iface.allowedVlans.length > 0 && (
+                            <div
+                              style={{
+                                marginTop: "4px",
+                                fontSize: "7px",
+                                color: "#64748b",
+                                background: "#f8fafc",
+                                padding: "4px",
+                                borderRadius: "3px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontWeight: "600",
+                                  marginBottom: "2px",
+                                }}
+                              >
+                                Allowed VLANs: {iface.allowedVlans.join(", ")}
+                              </div>
+                              <div style={{ color: "#8b5cf6" }}>
+                                Native VLAN: {iface.nativeVlan || 1}
+                              </div>
                             </div>
-                            <div style={{ color: '#8b5cf6' }}>
-                              Native VLAN: {iface.nativeVlan || 1}
-                            </div>
-                          </div>
-                        )}
+                          )}
                       </div>
                     )}
                   </>
@@ -1168,59 +1559,65 @@ export default function PropertiesPanel() {
       </div>
 
       {/* Routing Table - pouze pro routery */}
-      {selectedNode.data.type === 'router' && (
-        <div style={{ marginTop: '14px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px',
-          }}>
-            <h3 style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#1e293b',
-              letterSpacing: '0.3px',
-            }}>
+      {selectedNode.data.type === "router" && (
+        <div style={{ marginTop: "14px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#1e293b",
+                letterSpacing: "0.3px",
+              }}
+            >
               🗺️ ROUTING TABLE
             </h3>
             <button
               onClick={() => setShowAddRoute(!showAddRoute)}
               style={{
-                padding: '3px 8px',
-                background: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '9px',
-                cursor: 'pointer',
-                fontWeight: '600',
+                padding: "3px 8px",
+                background: "#3b82f6",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                fontSize: "9px",
+                cursor: "pointer",
+                fontWeight: "600",
               }}
             >
-              {showAddRoute ? '✖️' : '➕ Add'}
+              {showAddRoute ? "✖️" : "➕ Add"}
             </button>
           </div>
 
           {showAddRoute && (
-            <div style={{
-              background: '#f1f5f9',
-              padding: '10px',
-              borderRadius: '6px',
-              marginBottom: '8px',
-              border: '1px solid #cbd5e1',
-            }}>
+            <div
+              style={{
+                background: "#f1f5f9",
+                padding: "10px",
+                borderRadius: "6px",
+                marginBottom: "8px",
+                border: "1px solid #cbd5e1",
+              }}
+            >
               <input
                 type="text"
                 placeholder="Network (192.168.2.0)"
                 value={routeNetwork}
                 onChange={(e) => setRouteNetwork(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1229,12 +1626,12 @@ export default function PropertiesPanel() {
                 value={routeMask}
                 onChange={(e) => setRouteMask(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1243,12 +1640,12 @@ export default function PropertiesPanel() {
                 value={routeNextHop}
                 onChange={(e) => setRouteNextHop(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1257,26 +1654,26 @@ export default function PropertiesPanel() {
                 value={routeMetric}
                 onChange={(e) => setRouteMetric(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '8px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "8px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <button
                 onClick={handleAddRoute}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  background: '#059669',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '9px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
+                  width: "100%",
+                  padding: "6px",
+                  background: "#059669",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                  cursor: "pointer",
+                  fontWeight: "600",
                 }}
               >
                 💾 Save Route
@@ -1284,23 +1681,27 @@ export default function PropertiesPanel() {
             </div>
           )}
 
-          <div style={{
-            maxHeight: '180px',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
-          }}>
+          <div
+            style={{
+              maxHeight: "180px",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+            }}
+          >
             {(selectedNode.data.routingTable || []).length === 0 ? (
-              <div style={{
-                padding: '10px',
-                background: '#f8fafc',
-                borderRadius: '6px',
-                textAlign: 'center',
-                color: '#94a3b8',
-                fontSize: '9px',
-                fontStyle: 'italic',
-              }}>
+              <div
+                style={{
+                  padding: "10px",
+                  background: "#f8fafc",
+                  borderRadius: "6px",
+                  textAlign: "center",
+                  color: "#94a3b8",
+                  fontSize: "9px",
+                  fontStyle: "italic",
+                }}
+              >
                 Žádné routy
               </div>
             ) : (
@@ -1308,44 +1709,54 @@ export default function PropertiesPanel() {
                 <div
                   key={index}
                   style={{
-                    padding: '8px',
-                    background: 'white',
-                    borderRadius: '6px',
-                    border: '1px solid #e2e8f0',
+                    padding: "8px",
+                    background: "white",
+                    borderRadius: "6px",
+                    border: "1px solid #e2e8f0",
                   }}
                 >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '4px',
-                  }}>
-                    <div style={{
-                      fontSize: '9px',
-                      fontWeight: '600',
-                      color: '#1e293b',
-                      fontFamily: 'monospace',
-                    }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: "600",
+                        color: "#1e293b",
+                        fontFamily: "monospace",
+                      }}
+                    >
                       {route.network}/{route.mask}
                     </div>
                     <button
                       onClick={() => handleDeleteRoute(index)}
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#dc2626',
-                        cursor: 'pointer',
-                        fontSize: '10px',
-                        padding: '0',
+                        background: "none",
+                        border: "none",
+                        color: "#dc2626",
+                        cursor: "pointer",
+                        fontSize: "10px",
+                        padding: "0",
                       }}
                     >
                       🗑️
                     </button>
                   </div>
-                  <div style={{ fontSize: '8px', color: '#64748b' }}>
+                  <div style={{ fontSize: "8px", color: "#64748b" }}>
                     via {route.nextHop}
                   </div>
-                  <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
+                  <div
+                    style={{
+                      fontSize: "7px",
+                      color: "#94a3b8",
+                      marginTop: "2px",
+                    }}
+                  >
                     {route.protocol} [metric: {route.metric || 1}]
                   </div>
                 </div>
@@ -1356,32 +1767,39 @@ export default function PropertiesPanel() {
       )}
 
       {/* DHCP Server - pro routery a servery */}
-      {(selectedNode.data.type === 'router' || selectedNode.data.type === 'server') && (
-        <div style={{ marginTop: '14px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px',
-          }}>
-            <h3 style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#1e293b',
-              letterSpacing: '0.3px',
-            }}>
+      {(selectedNode.data.type === "router" ||
+        selectedNode.data.type === "server") && (
+        <div style={{ marginTop: "14px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#1e293b",
+                letterSpacing: "0.3px",
+              }}
+            >
               🌐 DHCP SERVER
             </h3>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                cursor: 'pointer',
-                fontSize: '9px',
-                color: '#64748b',
-                gap: '6px',
-              }}>
-                <span>{selectedNode.data.isDhcpServer ? 'ON' : 'OFF'}</span>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  fontSize: "9px",
+                  color: "#64748b",
+                  gap: "6px",
+                }}
+              >
+                <span>{selectedNode.data.isDhcpServer ? "ON" : "OFF"}</span>
                 <div
                   onClick={() => {
                     updateNode(selectedNode.id, {
@@ -1389,66 +1807,72 @@ export default function PropertiesPanel() {
                     });
                   }}
                   style={{
-                    width: '36px',
-                    height: '18px',
-                    background: selectedNode.data.isDhcpServer ? '#059669' : '#cbd5e1',
-                    borderRadius: '9px',
-                    position: 'relative',
-                    transition: 'background 0.3s',
+                    width: "36px",
+                    height: "18px",
+                    background: selectedNode.data.isDhcpServer
+                      ? "#059669"
+                      : "#cbd5e1",
+                    borderRadius: "9px",
+                    position: "relative",
+                    transition: "background 0.3s",
                   }}
                 >
-                  <div style={{
-                    width: '14px',
-                    height: '14px',
-                    background: 'white',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    top: '2px',
-                    left: selectedNode.data.isDhcpServer ? '20px' : '2px',
-                    transition: 'left 0.3s',
-                  }} />
+                  <div
+                    style={{
+                      width: "14px",
+                      height: "14px",
+                      background: "white",
+                      borderRadius: "50%",
+                      position: "absolute",
+                      top: "2px",
+                      left: selectedNode.data.isDhcpServer ? "20px" : "2px",
+                      transition: "left 0.3s",
+                    }}
+                  />
                 </div>
               </label>
               {selectedNode.data.isDhcpServer && (
                 <button
                   onClick={() => setShowAddDhcp(!showAddDhcp)}
                   style={{
-                    padding: '3px 8px',
-                    background: '#059669',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '9px',
-                    cursor: 'pointer',
-                    fontWeight: '600',
+                    padding: "3px 8px",
+                    background: "#059669",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "9px",
+                    cursor: "pointer",
+                    fontWeight: "600",
                   }}
                 >
-                  {showAddDhcp ? '✖️' : '➕ Add Pool'}
+                  {showAddDhcp ? "✖️" : "➕ Add Pool"}
                 </button>
               )}
             </div>
           </div>
 
           {selectedNode.data.isDhcpServer && showAddDhcp && (
-            <div style={{
-              background: '#f1f5f9',
-              padding: '10px',
-              borderRadius: '6px',
-              marginBottom: '8px',
-              border: '1px solid #cbd5e1',
-            }}>
+            <div
+              style={{
+                background: "#f1f5f9",
+                padding: "10px",
+                borderRadius: "6px",
+                marginBottom: "8px",
+                border: "1px solid #cbd5e1",
+              }}
+            >
               <input
                 type="text"
                 placeholder="Pool Name (LAN)"
                 value={dhcpName}
                 onChange={(e) => setDhcpName(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1457,12 +1881,12 @@ export default function PropertiesPanel() {
                 value={dhcpNetwork}
                 onChange={(e) => setDhcpNetwork(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1471,12 +1895,12 @@ export default function PropertiesPanel() {
                 value={dhcpMask}
                 onChange={(e) => setDhcpMask(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1485,12 +1909,12 @@ export default function PropertiesPanel() {
                 value={dhcpRouter}
                 onChange={(e) => setDhcpRouter(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1499,26 +1923,26 @@ export default function PropertiesPanel() {
                 value={dhcpDns}
                 onChange={(e) => setDhcpDns(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '8px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "8px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <button
                 onClick={handleAddDhcpPool}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  background: '#059669',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '9px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
+                  width: "100%",
+                  padding: "6px",
+                  background: "#059669",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                  cursor: "pointer",
+                  fontWeight: "600",
                 }}
               >
                 💾 Save Pool
@@ -1527,178 +1951,211 @@ export default function PropertiesPanel() {
           )}
 
           {selectedNode.data.isDhcpServer && (
-            <div style={{
-              maxHeight: '150px',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-            }}>
+            <div
+              style={{
+                maxHeight: "150px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+              }}
+            >
               {(selectedNode.data.dhcpPools || []).length === 0 ? (
-                <div style={{
-                  padding: '10px',
-                  background: '#f8fafc',
-                  borderRadius: '6px',
-                  textAlign: 'center',
-                  color: '#94a3b8',
-                  fontSize: '9px',
-                  fontStyle: 'italic',
-                }}>
+                <div
+                  style={{
+                    padding: "10px",
+                    background: "#f8fafc",
+                    borderRadius: "6px",
+                    textAlign: "center",
+                    color: "#94a3b8",
+                    fontSize: "9px",
+                    fontStyle: "italic",
+                  }}
+                >
                   Žádné DHCP pooly
                 </div>
               ) : (
                 (selectedNode.data.dhcpPools || []).map((pool, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: '8px',
-                    background: 'white',
-                    borderRadius: '6px',
-                    border: '1px solid #e2e8f0',
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '4px',
-                  }}>
-                    <div style={{
-                      fontSize: '9px',
-                      fontWeight: '600',
-                      color: '#1e293b',
-                    }}>
-                      {pool.name}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteDhcpPool(index)}
+                  <div
+                    key={index}
+                    style={{
+                      padding: "8px",
+                      background: "white",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#dc2626',
-                        cursor: 'pointer',
-                        fontSize: '10px',
-                        padding: '0',
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginBottom: "4px",
                       }}
                     >
-                      🗑️
-                    </button>
-                  </div>
-                  <div style={{ fontSize: '8px', color: '#64748b', fontFamily: 'monospace' }}>
-                    {pool.network}/{pool.mask}
-                  </div>
-                  {pool.defaultRouter && (
-                    <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
-                      Gateway: {pool.defaultRouter}
+                      <div
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: "600",
+                          color: "#1e293b",
+                        }}
+                      >
+                        {pool.name}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteDhcpPool(index)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          fontSize: "10px",
+                          padding: "0",
+                        }}
+                      >
+                        🗑️
+                      </button>
                     </div>
-                  )}
-                  {pool.dnsServer && (
-                    <div style={{ fontSize: '7px', color: '#94a3b8' }}>
-                      DNS: {pool.dnsServer}
+                    <div
+                      style={{
+                        fontSize: "8px",
+                        color: "#64748b",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {pool.network}/{pool.mask}
                     </div>
-                  )}
-                </div>
-              ))
-            )}
+                    {pool.defaultRouter && (
+                      <div
+                        style={{
+                          fontSize: "7px",
+                          color: "#94a3b8",
+                          marginTop: "2px",
+                        }}
+                      >
+                        Gateway: {pool.defaultRouter}
+                      </div>
+                    )}
+                    {pool.dnsServer && (
+                      <div style={{ fontSize: "7px", color: "#94a3b8" }}>
+                        DNS: {pool.dnsServer}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* DNS Server - pro routery a servery */}
-      {(selectedNode.data.type === 'router' || selectedNode.data.type === 'server') && (
-        <div style={{ marginTop: '14px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px',
-          }}>
-            <h3 style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#1e293b',
-            letterSpacing: '0.3px',
-          }}>
-            🔤 DNS SERVER
-          </h3>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              fontSize: '9px',
-              color: '#64748b',
-              gap: '6px',
-            }}>
-              <span>{selectedNode.data.isDnsServer ? 'ON' : 'OFF'}</span>
-              <div
-                onClick={() => {
-                  updateNode(selectedNode.id, {
-                    isDnsServer: !selectedNode.data.isDnsServer,
-                  });
-                }}
+      {(selectedNode.data.type === "router" ||
+        selectedNode.data.type === "server") && (
+        <div style={{ marginTop: "14px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#1e293b",
+                letterSpacing: "0.3px",
+              }}
+            >
+              🔤 DNS SERVER
+            </h3>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <label
                 style={{
-                  width: '36px',
-                  height: '18px',
-                  background: selectedNode.data.isDnsServer ? '#7c3aed' : '#cbd5e1',
-                  borderRadius: '9px',
-                  position: 'relative',
-                  transition: 'background 0.3s',
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  fontSize: "9px",
+                  color: "#64748b",
+                  gap: "6px",
                 }}
               >
-                <div style={{
-                  width: '14px',
-                  height: '14px',
-                  background: 'white',
-                  borderRadius: '50%',
-                  position: 'absolute',
-                  top: '2px',
-                  left: selectedNode.data.isDnsServer ? '20px' : '2px',
-                  transition: 'left 0.3s',
-                }} />
-              </div>
-            </label>
-            {selectedNode.data.isDnsServer && (
-              <button
-                onClick={() => setShowAddDns(!showAddDns)}
-                style={{
-                  padding: '3px 8px',
-                  background: '#7c3aed',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '9px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                }}
-              >
-                {showAddDns ? '✖️' : '➕ Add Record'}
-              </button>
-            )}
+                <span>{selectedNode.data.isDnsServer ? "ON" : "OFF"}</span>
+                <div
+                  onClick={() => {
+                    updateNode(selectedNode.id, {
+                      isDnsServer: !selectedNode.data.isDnsServer,
+                    });
+                  }}
+                  style={{
+                    width: "36px",
+                    height: "18px",
+                    background: selectedNode.data.isDnsServer
+                      ? "#7c3aed"
+                      : "#cbd5e1",
+                    borderRadius: "9px",
+                    position: "relative",
+                    transition: "background 0.3s",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "14px",
+                      height: "14px",
+                      background: "white",
+                      borderRadius: "50%",
+                      position: "absolute",
+                      top: "2px",
+                      left: selectedNode.data.isDnsServer ? "20px" : "2px",
+                      transition: "left 0.3s",
+                    }}
+                  />
+                </div>
+              </label>
+              {selectedNode.data.isDnsServer && (
+                <button
+                  onClick={() => setShowAddDns(!showAddDns)}
+                  style={{
+                    padding: "3px 8px",
+                    background: "#7c3aed",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "9px",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                  }}
+                >
+                  {showAddDns ? "✖️" : "➕ Add Record"}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
           {selectedNode.data.isDnsServer && showAddDns && (
-            <div style={{
-              background: '#f1f5f9',
-              padding: '10px',
-              borderRadius: '6px',
-              marginBottom: '8px',
-              border: '1px solid #cbd5e1',
-            }}>
+            <div
+              style={{
+                background: "#f1f5f9",
+                padding: "10px",
+                borderRadius: "6px",
+                marginBottom: "8px",
+                border: "1px solid #cbd5e1",
+              }}
+            >
               <input
                 type="text"
                 placeholder="Hostname (pc1.local)"
                 value={dnsHostname}
                 onChange={(e) => setDnsHostname(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1707,24 +2164,26 @@ export default function PropertiesPanel() {
                 value={dnsIpAddress}
                 onChange={(e) => setDnsIpAddress(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <select
                 value={dnsType}
-                onChange={(e) => setDnsType(e.target.value as 'A' | 'AAAA' | 'CNAME')}
+                onChange={(e) =>
+                  setDnsType(e.target.value as "A" | "AAAA" | "CNAME")
+                }
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '8px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "8px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               >
                 <option value="A">A (IPv4)</option>
@@ -1734,15 +2193,15 @@ export default function PropertiesPanel() {
               <button
                 onClick={handleAddDnsRecord}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  background: '#7c3aed',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '9px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
+                  width: "100%",
+                  padding: "6px",
+                  background: "#7c3aed",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                  cursor: "pointer",
+                  fontWeight: "600",
                 }}
               >
                 💾 Save Record
@@ -1751,119 +2210,145 @@ export default function PropertiesPanel() {
           )}
 
           {selectedNode.data.isDnsServer && (
-            <div style={{
-              maxHeight: '150px',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-            }}>
+            <div
+              style={{
+                maxHeight: "150px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+              }}
+            >
               {(selectedNode.data.dnsRecords || []).length === 0 ? (
-                <div style={{
-                  padding: '10px',
-                  background: '#f8fafc',
-                  borderRadius: '6px',
-                  textAlign: 'center',
-                  color: '#94a3b8',
-                  fontSize: '9px',
-                  fontStyle: 'italic',
-                }}>
+                <div
+                  style={{
+                    padding: "10px",
+                    background: "#f8fafc",
+                    borderRadius: "6px",
+                    textAlign: "center",
+                    color: "#94a3b8",
+                    fontSize: "9px",
+                    fontStyle: "italic",
+                  }}
+                >
                   Žádné DNS záznamy
                 </div>
               ) : (
                 (selectedNode.data.dnsRecords || []).map((record, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: '8px',
-                    background: 'white',
-                    borderRadius: '6px',
-                    border: '1px solid #e2e8f0',
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '4px',
-                  }}>
-                    <div style={{
-                      fontSize: '9px',
-                      fontWeight: '600',
-                      color: '#1e293b',
-                    }}>
-                      {record.hostname}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteDnsRecord(index)}
+                  <div
+                    key={index}
+                    style={{
+                      padding: "8px",
+                      background: "white",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#dc2626',
-                        cursor: 'pointer',
-                        fontSize: '10px',
-                        padding: '0',
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginBottom: "4px",
                       }}
                     >
-                      🗑️
-                    </button>
+                      <div
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: "600",
+                          color: "#1e293b",
+                        }}
+                      >
+                        {record.hostname}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteDnsRecord(index)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          fontSize: "10px",
+                          padding: "0",
+                        }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "8px",
+                        color: "#64748b",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {record.ipAddress}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "7px",
+                        color: "#94a3b8",
+                        marginTop: "2px",
+                      }}
+                    >
+                      Type: {record.type}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '8px', color: '#64748b', fontFamily: 'monospace' }}>
-                    {record.ipAddress}
-                  </div>
-                  <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
-                    Type: {record.type}
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* VLAN Configuration - only for switches */}
-      {selectedNode.data.type === 'switch' && (
-        <div style={{ marginTop: '14px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px',
-          }}>
-            <h3 style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#1e293b',
-              letterSpacing: '0.3px',
-            }}>
+      {selectedNode.data.type === "switch" && (
+        <div style={{ marginTop: "14px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#1e293b",
+                letterSpacing: "0.3px",
+              }}
+            >
               🔀 VLAN CONFIGURATION
             </h3>
             <button
               onClick={() => setShowAddVlan(!showAddVlan)}
               style={{
-                padding: '3px 8px',
-                background: '#0ea5e9',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '9px',
-                cursor: 'pointer',
-                fontWeight: '600',
+                padding: "3px 8px",
+                background: "#0ea5e9",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                fontSize: "9px",
+                cursor: "pointer",
+                fontWeight: "600",
               }}
             >
-              {showAddVlan ? '✖️' : '➕ Add VLAN'}
+              {showAddVlan ? "✖️" : "➕ Add VLAN"}
             </button>
           </div>
 
           {showAddVlan && (
-            <div style={{
-              background: '#f1f5f9',
-              padding: '10px',
-              borderRadius: '6px',
-              marginBottom: '8px',
-              border: '1px solid #cbd5e1',
-            }}>
+            <div
+              style={{
+                background: "#f1f5f9",
+                padding: "10px",
+                borderRadius: "6px",
+                marginBottom: "8px",
+                border: "1px solid #cbd5e1",
+              }}
+            >
               <input
                 type="number"
                 placeholder="VLAN ID (2-4094)"
@@ -1872,12 +2357,12 @@ export default function PropertiesPanel() {
                 min="1"
                 max="4094"
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '6px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <input
@@ -1886,26 +2371,26 @@ export default function PropertiesPanel() {
                 value={vlanName}
                 onChange={(e) => setVlanName(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  marginBottom: '8px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "8px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                 }}
               />
               <button
                 onClick={handleAddVlan}
                 style={{
-                  width: '100%',
-                  padding: '6px',
-                  background: '#0ea5e9',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '9px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
+                  width: "100%",
+                  padding: "6px",
+                  background: "#0ea5e9",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                  cursor: "pointer",
+                  fontWeight: "600",
                 }}
               >
                 💾 Save VLAN
@@ -1913,52 +2398,67 @@ export default function PropertiesPanel() {
             </div>
           )}
 
-          <div style={{
-            maxHeight: '150px',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
-            marginBottom: '12px',
-          }}>
-            {(selectedNode.data.vlans || [{ id: 1, name: 'default', ports: [] }]).map((vlan) => (
+          <div
+            style={{
+              maxHeight: "150px",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+              marginBottom: "12px",
+            }}
+          >
+            {(
+              selectedNode.data.vlans || [{ id: 1, name: "default", ports: [] }]
+            ).map((vlan) => (
               <div
                 key={vlan.id}
                 style={{
-                  padding: '8px',
-                  background: 'white',
-                  borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
+                  padding: "8px",
+                  background: "white",
+                  borderRadius: "6px",
+                  border: "1px solid #e2e8f0",
                 }}
               >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '4px',
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "4px",
+                  }}
+                >
                   <div>
-                    <div style={{
-                      fontSize: '9px',
-                      fontWeight: '600',
-                      color: '#1e293b',
-                    }}>
+                    <div
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: "600",
+                        color: "#1e293b",
+                      }}
+                    >
                       VLAN {vlan.id} - {vlan.name}
                     </div>
-                    <div style={{ fontSize: '7px', color: '#94a3b8', marginTop: '2px' }}>
-                      Ports: {vlan.ports.length > 0 ? vlan.ports.join(', ') : 'None'}
+                    <div
+                      style={{
+                        fontSize: "7px",
+                        color: "#94a3b8",
+                        marginTop: "2px",
+                      }}
+                    >
+                      Ports:{" "}
+                      {vlan.ports.length > 0 ? vlan.ports.join(", ") : "None"}
                     </div>
                   </div>
                   {vlan.id !== 1 && (
                     <button
                       onClick={() => handleDeleteVlan(vlan.id)}
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#dc2626',
-                        cursor: 'pointer',
-                        fontSize: '10px',
-                        padding: '0',
+                        background: "none",
+                        border: "none",
+                        color: "#dc2626",
+                        cursor: "pointer",
+                        fontSize: "10px",
+                        padding: "0",
                       }}
                     >
                       🗑️
@@ -1970,74 +2470,90 @@ export default function PropertiesPanel() {
           </div>
 
           {/* Port Configuration */}
-          <div style={{
-            background: '#f8fafc',
-            padding: '10px',
-            borderRadius: '6px',
-            border: '1px solid #e2e8f0',
-          }}>
-            <h4 style={{
-              fontSize: '10px',
-              fontWeight: '600',
-              color: '#1e293b',
-              marginBottom: '8px',
-            }}>
+          <div
+            style={{
+              background: "#f8fafc",
+              padding: "10px",
+              borderRadius: "6px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <h4
+              style={{
+                fontSize: "10px",
+                fontWeight: "600",
+                color: "#1e293b",
+                marginBottom: "8px",
+              }}
+            >
               🔌 Port Assignment
             </h4>
-            <div style={{
-              maxHeight: '200px',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-            }}>
+            <div
+              style={{
+                maxHeight: "200px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+              }}
+            >
               {selectedNode.data.interfaces.map((iface) => (
                 <div
                   key={iface.name}
                   style={{
-                    padding: '6px',
-                    background: editingPort === iface.name ? '#dbeafe' : 'white',
-                    borderRadius: '4px',
-                    border: '1px solid #cbd5e1',
+                    padding: "6px",
+                    background:
+                      editingPort === iface.name ? "#dbeafe" : "white",
+                    borderRadius: "4px",
+                    border: "1px solid #cbd5e1",
                   }}
                 >
                   {editingPort === iface.name ? (
                     <div>
-                      <div style={{ fontSize: '8px', fontWeight: '600', marginBottom: '4px', color: '#1e293b' }}>
+                      <div
+                        style={{
+                          fontSize: "8px",
+                          fontWeight: "600",
+                          marginBottom: "4px",
+                          color: "#1e293b",
+                        }}
+                      >
                         {iface.name}
                       </div>
                       <select
                         value={portVlan}
                         onChange={(e) => setPortVlan(e.target.value)}
                         style={{
-                          width: '100%',
-                          padding: '4px',
-                          marginBottom: '4px',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '3px',
-                          fontSize: '8px',
+                          width: "100%",
+                          padding: "4px",
+                          marginBottom: "4px",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "3px",
+                          fontSize: "8px",
                         }}
                       >
                         <option value="1">VLAN 1 (default)</option>
-                        {(selectedNode.data.vlans || []).filter(v => v.id !== 1).map(vlan => (
-                          <option key={vlan.id} value={vlan.id}>
-                            VLAN {vlan.id} - {vlan.name}
-                          </option>
-                        ))}
+                        {(selectedNode.data.vlans || [])
+                          .filter((v) => v.id !== 1)
+                          .map((vlan) => (
+                            <option key={vlan.id} value={vlan.id}>
+                              VLAN {vlan.id} - {vlan.name}
+                            </option>
+                          ))}
                       </select>
-                      <div style={{ display: 'flex', gap: '4px' }}>
+                      <div style={{ display: "flex", gap: "4px" }}>
                         <button
                           onClick={handleSavePortConfig}
                           style={{
                             flex: 1,
-                            padding: '4px',
-                            background: '#0ea5e9',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '3px',
-                            fontSize: '7px',
-                            cursor: 'pointer',
-                            fontWeight: '600',
+                            padding: "4px",
+                            background: "#0ea5e9",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "3px",
+                            fontSize: "7px",
+                            cursor: "pointer",
+                            fontWeight: "600",
                           }}
                         >
                           ✓ Save
@@ -2046,14 +2562,14 @@ export default function PropertiesPanel() {
                           onClick={() => setEditingPort(null)}
                           style={{
                             flex: 1,
-                            padding: '4px',
-                            background: '#94a3b8',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '3px',
-                            fontSize: '7px',
-                            cursor: 'pointer',
-                            fontWeight: '600',
+                            padding: "4px",
+                            background: "#94a3b8",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "3px",
+                            fontSize: "7px",
+                            cursor: "pointer",
+                            fontWeight: "600",
                           }}
                         >
                           ✖ Cancel
@@ -2061,30 +2577,38 @@ export default function PropertiesPanel() {
                       </div>
                     </div>
                   ) : (
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <div>
-                        <div style={{ fontSize: '8px', fontWeight: '600', color: '#1e293b' }}>
+                        <div
+                          style={{
+                            fontSize: "8px",
+                            fontWeight: "600",
+                            color: "#1e293b",
+                          }}
+                        >
                           {iface.name}
                         </div>
-                        <div style={{ fontSize: '7px', color: '#64748b' }}>
+                        <div style={{ fontSize: "7px", color: "#64748b" }}>
                           VLAN {iface.vlanId || 1}
                         </div>
                       </div>
                       <button
                         onClick={() => handleEditPort(iface.name)}
                         style={{
-                          padding: '2px 6px',
-                          background: '#0ea5e9',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '3px',
-                          fontSize: '7px',
-                          cursor: 'pointer',
-                          fontWeight: '600',
+                          padding: "2px 6px",
+                          background: "#0ea5e9",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "3px",
+                          fontSize: "7px",
+                          cursor: "pointer",
+                          fontWeight: "600",
                         }}
                       >
                         ⚙️ Configure
@@ -2098,28 +2622,37 @@ export default function PropertiesPanel() {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginTop: '14px' }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "7px",
+          marginTop: "14px",
+        }}
+      >
         <button
           style={{
-            width: '100%',
-            padding: '8px',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '10px',
-            fontWeight: '600',
-            boxShadow: '0 3px 4px rgba(59, 130, 246, 0.3)',
-            transition: 'all 0.2s',
+            width: "100%",
+            padding: "8px",
+            background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "10px",
+            fontWeight: "600",
+            boxShadow: "0 3px 4px rgba(59, 130, 246, 0.3)",
+            transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1.5px)';
-            e.currentTarget.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
+            e.currentTarget.style.transform = "translateY(-1.5px)";
+            e.currentTarget.style.boxShadow =
+              "0 4px 8px rgba(59, 130, 246, 0.4)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 3px 4px rgba(59, 130, 246, 0.3)';
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow =
+              "0 3px 4px rgba(59, 130, 246, 0.3)";
           }}
         >
           ⚙️ Konfigurovat
@@ -2128,26 +2661,28 @@ export default function PropertiesPanel() {
         <button
           onClick={() => setShowCLI(true)}
           style={{
-            width: '100%',
-            padding: '8px',
-            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-            border: 'none',
-            borderRadius: '6px',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '10px',
-            fontWeight: '600',
-            boxShadow: '0 3px 4px rgba(5, 150, 105, 0.3)',
-            transition: 'all 0.2s',
-            marginBottom: '8px',
+            width: "100%",
+            padding: "8px",
+            background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+            border: "none",
+            borderRadius: "6px",
+            color: "white",
+            cursor: "pointer",
+            fontSize: "10px",
+            fontWeight: "600",
+            boxShadow: "0 3px 4px rgba(5, 150, 105, 0.3)",
+            transition: "all 0.2s",
+            marginBottom: "8px",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1.5px)';
-            e.currentTarget.style.boxShadow = '0 4px 8px rgba(5, 150, 105, 0.4)';
+            e.currentTarget.style.transform = "translateY(-1.5px)";
+            e.currentTarget.style.boxShadow =
+              "0 4px 8px rgba(5, 150, 105, 0.4)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 3px 4px rgba(5, 150, 105, 0.3)';
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow =
+              "0 3px 4px rgba(5, 150, 105, 0.3)";
           }}
         >
           📟 Otevřít CLI
@@ -2156,31 +2691,33 @@ export default function PropertiesPanel() {
         <button
           onClick={handleDelete}
           style={{
-            width: '100%',
-            padding: '8px',
-            background: 'white',
-            color: '#dc2626',
-            border: '1.5px solid #fecaca',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '10px',
-            fontWeight: '600',
-            transition: 'all 0.2s',
+            width: "100%",
+            padding: "8px",
+            background: "white",
+            color: "#dc2626",
+            border: "1.5px solid #fecaca",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "10px",
+            fontWeight: "600",
+            transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#fef2f2';
-            e.currentTarget.style.borderColor = '#dc2626';
+            e.currentTarget.style.background = "#fef2f2";
+            e.currentTarget.style.borderColor = "#dc2626";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'white';
-            e.currentTarget.style.borderColor = '#fecaca';
+            e.currentTarget.style.background = "white";
+            e.currentTarget.style.borderColor = "#fecaca";
           }}
         >
           🗑️ Smazat Zařízení
         </button>
       </div>
 
-      {showCLI && <CLITerminal device={selectedNode} onClose={() => setShowCLI(false)} />}
+      {showCLI && (
+        <CLITerminal device={selectedNode} onClose={() => setShowCLI(false)} />
+      )}
     </div>
   );
 }

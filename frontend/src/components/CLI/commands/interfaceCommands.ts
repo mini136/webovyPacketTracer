@@ -264,7 +264,10 @@ export const helpInterfaceCommand: Command = {
   mode: 'interface',
   execute: (_args, context) => {
     const baseCommands = [
-      '  ip address IP MASK       - Set IP address',
+      '  ip address IP MASK       - Set IPv4 address',
+      '  ipv6 address ADDR/PREFIX - Set IPv6 address',
+      '  ipv6 enable              - Enable IPv6 on interface',
+      '  no ipv6 address          - Remove IPv6 address',
       '  no shutdown              - Enable interface',
       '  shutdown                 - Disable interface',
       '  description TEXT         - Set interface description',
@@ -295,8 +298,101 @@ export const helpInterfaceCommand: Command = {
   }
 };
 
+export const ipv6AddressCommand: Command = {
+  name: 'ipv6 address',
+  aliases: [],
+  description: 'Set IPv6 address',
+  mode: 'interface',
+  execute: (args, context) => {
+    if (args.length < 1) {
+      return { output: ['% Incomplete command'] };
+    }
+    
+    // Parse IPv6 address/prefix (e.g., "2001:db8::1/64")
+    const addressWithPrefix = args[0];
+    const [ipv6Address, prefixStr] = addressWithPrefix.split('/');
+    const ipv6PrefixLength = prefixStr ? parseInt(prefixStr) : 64;
+    
+    // Check if this is a sub-interface
+    if (context.currentInterface?.includes('.')) {
+      const [parentName] = context.currentInterface.split('.');
+      const interfaces = context.device.data.interfaces.map(iface => {
+        if (iface.name === parentName) {
+          const subInterfaces = iface.subInterfaces || [];
+          const subIdx = subInterfaces.findIndex(si => si.name === context.currentInterface);
+          
+          if (subIdx >= 0) {
+            subInterfaces[subIdx] = {
+              ...subInterfaces[subIdx],
+              ipv6Address,
+              ipv6PrefixLength,
+              ipv6Enabled: true,
+            };
+          } else {
+            // Create new sub-interface with IPv6
+            subInterfaces.push({
+              name: context.currentInterface!,
+              vlanId: parseInt(context.currentInterface!.split('.')[1]) || 1,
+              ipv6Address,
+              ipv6PrefixLength,
+              ipv6Enabled: true,
+            });
+          }
+          
+          return { ...iface, subInterfaces };
+        }
+        return iface;
+      });
+      context.updateNode(context.device.id, { interfaces });
+      return { output: [''] };
+    }
+    
+    // Regular interface
+    const interfaces = context.device.data.interfaces.map(iface =>
+      iface.name === context.currentInterface
+        ? { ...iface, ipv6Address, ipv6PrefixLength, ipv6Enabled: true }
+        : iface
+    );
+    context.updateNode(context.device.id, { interfaces });
+    return { output: [''] };
+  }
+};
+
+export const ipv6EnableCommand: Command = {
+  name: 'ipv6 enable',
+  aliases: [],
+  description: 'Enable IPv6 on interface',
+  mode: 'interface',
+  execute: (_args, context) => {
+    const interfaces = context.device.data.interfaces.map(iface =>
+      iface.name === context.currentInterface ? { ...iface, ipv6Enabled: true } : iface
+    );
+    context.updateNode(context.device.id, { interfaces });
+    return { output: [''] };
+  }
+};
+
+export const noIpv6AddressCommand: Command = {
+  name: 'no ipv6 address',
+  aliases: [],
+  description: 'Remove IPv6 address',
+  mode: 'interface',
+  execute: (_args, context) => {
+    const interfaces = context.device.data.interfaces.map(iface =>
+      iface.name === context.currentInterface
+        ? { ...iface, ipv6Address: undefined, ipv6PrefixLength: undefined, ipv6Enabled: false }
+        : iface
+    );
+    context.updateNode(context.device.id, { interfaces });
+    return { output: [''] };
+  }
+};
+
 export const interfaceCommands: Command[] = [
   ipAddressCommand,
+  ipv6AddressCommand,
+  ipv6EnableCommand,
+  noIpv6AddressCommand,
   noShutdownCommand,
   shutdownCommand,
   descriptionCommand,
