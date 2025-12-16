@@ -18,7 +18,7 @@ function App() {
   }
 
   if (showAdminPanel && user?.role === 'admin') {
-    return <AdminPanel />;
+    return <AdminPanel onClose={() => setShowAdminPanel(false)} />;
   }
 
   return (

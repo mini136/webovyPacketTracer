@@ -14,7 +14,11 @@ interface User {
 
 const API_URL = 'http://localhost:3000';
 
-export const AdminPanel: React.FC = () => {
+interface AdminPanelProps {
+  onClose?: () => void;
+}
+
+export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const { user, token, logout } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -153,7 +157,25 @@ export const AdminPanel: React.FC = () => {
           alignItems: 'center',
           marginBottom: '20px',
         }}>
-          <h1>Administrační panel</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <h1>Administrační panel</h1>
+            {onClose && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                ← Zpět do editoru
+              </button>
+            )}
+          </div>
           <div>
             <span style={{ marginRight: '15px' }}>
               Přihlášen jako: <strong>{user.username}</strong> ({user.role})
