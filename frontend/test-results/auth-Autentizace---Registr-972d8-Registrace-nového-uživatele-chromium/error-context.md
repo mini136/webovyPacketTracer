@@ -6,10 +6,10 @@
   - generic [ref=e7]:
     - generic [ref=e8]:
       - text: "Uživatelské jméno:"
-      - textbox "Uživatelské jméno:" [ref=e9]: testuser1765876534535
+      - textbox "Uživatelské jméno:" [ref=e9]: testuser1765883008116
     - generic [ref=e10]:
       - text: "Email:"
-      - textbox "Email:" [ref=e11]: test1765876534535@example.com
+      - textbox "Email:" [ref=e11]: test1765883008116@example.com
     - generic [ref=e12]:
       - text: "Heslo:"
       - textbox "Heslo:" [ref=e13]: Test123456!

@@ -8,7 +8,7 @@ services:
     container_name: network-sim-mongodb
     restart: unless-stopped
     ports:
-      - "30469:30469"
+      - "30111:30111"
     volumes:
       - mongodb_data:/data/db
     environment:
