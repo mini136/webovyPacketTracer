@@ -23,7 +23,7 @@ import { User, UserSchema } from './schemas/user.schema';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://46.13.167.200:30111/network-simulator'),
+    MongooseModule.forRoot('mongodb://46.13.167.200:30469/network-simulator'),
     MongooseModule.forFeature([
       { name: Topology.name, schema: TopologySchema },
       { name: Device.name, schema: DeviceSchema },

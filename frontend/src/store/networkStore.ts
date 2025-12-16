@@ -35,6 +35,8 @@ export interface NetworkInterface {
   ipv6Enabled?: boolean;
   // General
   enabled?: boolean;
+  status?: 'up' | 'down' | 'admin-down'; // Port status
+  macAddress?: string; // MAC address of this interface
   vlanId?: number;
   trunkMode?: boolean; // true = trunk port (tagged), false/undefined = access port
   allowedVlans?: number[]; // For trunk ports: list of allowed VLANs (e.g., [10, 20, 30])
@@ -42,6 +44,14 @@ export interface NetworkInterface {
   description?: string;
   speed?: '10' | '100' | '1000' | 'auto';
   duplex?: 'half' | 'full' | 'auto';
+  // Statistics
+  packetsIn?: number;
+  packetsOut?: number;
+  bytesIn?: number;
+  bytesOut?: number;
+  errorsIn?: number;
+  errorsOut?: number;
+  bandwidth?: number; // in Mbps (e.g., 100 for FastEthernet)
   subInterfaces?: SubInterface[]; // For routers: sub-interfaces for VLANs
   // Port position: 'left' | 'right' | 'top' | 'bottom'
   position?: 'left' | 'right' | 'top' | 'bottom';
@@ -84,10 +94,57 @@ export interface DHCPPool {
   excludedAddresses?: string[];
 }
 
+export interface DHCPv6Pool {
+  name: string;
+  prefix: string; // IPv6 prefix (e.g., "2001:db8:10::")
+  prefixLength: number; // e.g., 64
+  dnsServer?: string; // IPv6 DNS server
+  leaseTime?: number; // in seconds
+  excludedAddresses?: string[];
+}
+
 export interface DNSRecord {
   hostname: string;
   ipAddress: string;
   type: 'A' | 'AAAA' | 'CNAME';
+}
+
+// ARP Table Entry (IPv4)
+export interface ARPEntry {
+  ipAddress: string;
+  macAddress: string;
+  interface: string; // Which interface learned this
+  age: number; // Age in seconds
+  type: 'dynamic' | 'static';
+}
+
+// NDP Table Entry (IPv6 Neighbor Discovery)
+export interface NDPEntry {
+  ipv6Address: string;
+  macAddress: string;
+  interface: string;
+  age: number;
+  type: 'dynamic' | 'static';
+  state: 'REACH' | 'STALE' | 'DELAY' | 'PROBE' | 'INCOMPLETE';
+}
+
+// MAC Address Table (for switches)
+export interface MACTableEntry {
+  macAddress: string;
+  vlan: number;
+  interface: string; // Port where MAC was learned
+  type: 'dynamic' | 'static';
+  age: number;
+}
+
+// Link properties (for connections)
+export interface LinkProperties {
+  bandwidth?: number; // Mbps
+  latency?: number; // milliseconds
+  packetLoss?: number; // percentage (0-100)
+  jitter?: number; // milliseconds
+  mtu?: number; // Maximum Transmission Unit in bytes
+  status?: 'up' | 'down';
 }
 
 export interface NATConfig {
@@ -111,8 +168,13 @@ export interface DeviceNode extends Node {
     enableSecret?: string;
     hostname?: string;
     dhcpPools?: DHCPPool[];
+    dhcpv6Pools?: DHCPv6Pool[];
     dnsRecords?: DNSRecord[];
     natConfig?: NATConfig[];
+    // Network tables
+    arpTable?: ARPEntry[]; // IPv4 address resolution
+    ndpTable?: NDPEntry[]; // IPv6 neighbor discovery
+    macTable?: MACTableEntry[]; // MAC address learning (switches)
     // Switch specific
     vlans?: VLANConfig[];
     trunkPorts?: string[];
@@ -121,6 +183,7 @@ export interface DeviceNode extends Node {
     vtpDomain?: string;
     // Server specific
     isDhcpServer?: boolean;
+    isDhcpv6Server?: boolean;
     isDnsServer?: boolean;
     // All devices
     macAddress?: string;
@@ -131,16 +194,22 @@ export interface DeviceNode extends Node {
   };
 }
 
+// Extended Edge type with link properties
+export interface NetworkEdge extends Edge {
+  data?: LinkProperties;
+}
+
 interface NetworkState {
   nodes: DeviceNode[];
-  edges: Edge[];
+  edges: NetworkEdge[];
   selectedNode: DeviceNode | null;
   topologyId: string | null;
   activePackets: PacketAnimation[];
   
   setNodes: (nodes: DeviceNode[]) => void;
-  setEdges: (edges: Edge[]) => void;
+  setEdges: (edges: NetworkEdge[]) => void;
   addNode: (node: DeviceNode) => void;
+  updateEdge: (id: string, data: Partial<LinkProperties>) => void;
   removeNode: (id: string) => void;
   updateNode: (id: string, data: Partial<DeviceNode['data']>) => void;
   onConnect: OnConnect;
@@ -189,6 +258,12 @@ export const useNetworkStore = create<NetworkState>((set) => ({
 
   onConnect: (connection) => set((state) => ({
     edges: addEdge(connection, state.edges),
+  })),
+
+  updateEdge: (id, data) => set((state) => ({
+    edges: state.edges.map((edge) =>
+      edge.id === id ? { ...edge, data: { ...edge.data, ...data } } : edge
+    ),
   })),
 
   setSelectedNode: (node) => set({ selectedNode: node }),
