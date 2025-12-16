@@ -21,6 +21,13 @@ export default function PropertiesPanel() {
   const [routeNextHop, setRouteNextHop] = useState("");
   const [routeMetric, setRouteMetric] = useState("1");
 
+  // IPv6 Routing Table state
+  const [showAddIpv6Route, setShowAddIpv6Route] = useState(false);
+  const [ipv6RouteNetwork, setIpv6RouteNetwork] = useState("");
+  const [ipv6RoutePrefixLength, setIpv6RoutePrefixLength] = useState("64");
+  const [ipv6RouteNextHop, setIpv6RouteNextHop] = useState("");
+  const [ipv6RouteMetric, setIpv6RouteMetric] = useState("1");
+
   // DHCP state
   const [showAddDhcp, setShowAddDhcp] = useState(false);
   const [dhcpName, setDhcpName] = useState("");
@@ -28,6 +35,13 @@ export default function PropertiesPanel() {
   const [dhcpMask, setDhcpMask] = useState("");
   const [dhcpRouter, setDhcpRouter] = useState("");
   const [dhcpDns, setDhcpDns] = useState("");
+
+  // DHCPv6 state
+  const [showAddDhcpv6, setShowAddDhcpv6] = useState(false);
+  const [dhcpv6Name, setDhcpv6Name] = useState("");
+  const [dhcpv6Prefix, setDhcpv6Prefix] = useState("");
+  const [dhcpv6PrefixLength, setDhcpv6PrefixLength] = useState("64");
+  const [dhcpv6DnsServer, setDhcpv6DnsServer] = useState("");
 
   // DNS state
   const [showAddDns, setShowAddDns] = useState(false);
@@ -48,6 +62,30 @@ export default function PropertiesPanel() {
   );
   const [subInterfaceName, setSubInterfaceName] = useState("");
   const [subInterfaceVlan, setSubInterfaceVlan] = useState("");
+
+  // IPv6 validation function
+  const validateIPv6 = (address: string): boolean => {
+    if (!address) return true; // Empty is OK
+
+    // IPv6 regex - podporuje plnou i zkrácenou notaci
+    const ipv6Regex =
+      /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/;
+    return ipv6Regex.test(address);
+  };
+
+  // IPv4 validation function
+  const validateIPv4 = (address: string): boolean => {
+    if (!address) return true; // Empty is OK
+    const ipv4Regex =
+      /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    return ipv4Regex.test(address);
+  };
+
+  // Validate IPv6 prefix length
+  const validatePrefixLength = (prefix: string): boolean => {
+    const num = parseInt(prefix);
+    return !isNaN(num) && num >= 1 && num <= 128;
+  };
   const [subInterfaceIp, setSubInterfaceIp] = useState("");
   const [subInterfaceMask, setSubInterfaceMask] = useState("");
   const [subInterfaceDesc, setSubInterfaceDesc] = useState("");
@@ -131,6 +169,40 @@ export default function PropertiesPanel() {
   };
 
   const handleSaveInterface = (index: number) => {
+    // Validace IPv4
+    if (ipv4 && !validateIPv4(ipv4)) {
+      alert("❌ Neplatná IPv4 adresa! Použij formát: 192.168.1.1");
+      return;
+    }
+    if (subnet && !validateIPv4(subnet)) {
+      alert("❌ Neplatná subnet maska! Použij formát: 255.255.255.0");
+      return;
+    }
+    if (gateway && !validateIPv4(gateway)) {
+      alert("❌ Neplatná gateway adresa! Použij formát: 192.168.1.1");
+      return;
+    }
+
+    // Validace IPv6
+    if (ipv6Enabled) {
+      if (ipv6 && !validateIPv6(ipv6)) {
+        alert(
+          "❌ Neplatná IPv6 adresa! Použij formát: 2001:db8::1 nebo 2001:0db8:0000:0000:0000:0000:0000:0001"
+        );
+        return;
+      }
+      if (!validatePrefixLength(ipv6Prefix)) {
+        alert(
+          "❌ Neplatný prefix length! Musí být číslo mezi 1-128 (standardně 64)"
+        );
+        return;
+      }
+      if (ipv6Gateway && !validateIPv6(ipv6Gateway)) {
+        alert("❌ Neplatná IPv6 gateway! Použij formát: 2001:db8::1");
+        return;
+      }
+    }
+
     const newInterfaces = [...selectedNode.data.interfaces];
     newInterfaces[index] = {
       ...newInterfaces[index],
@@ -205,6 +277,56 @@ export default function PropertiesPanel() {
     updateNode(selectedNode.id, { routingTable: newRoutes });
   };
 
+  // IPv6 Routing handlers
+  const handleAddIpv6Route = () => {
+    if (!ipv6RouteNetwork || !ipv6RouteNextHop) {
+      alert("Vyplň síť a next hop!");
+      return;
+    }
+
+    // Validace
+    if (!validateIPv6(ipv6RouteNetwork)) {
+      alert("❌ Neplatná IPv6 síť! Použij formát: 2001:db8:1234::");
+      return;
+    }
+
+    if (!validatePrefixLength(ipv6RoutePrefixLength)) {
+      alert("❌ Neplatný prefix length! Musí být číslo mezi 1-128");
+      return;
+    }
+
+    if (!validateIPv6(ipv6RouteNextHop)) {
+      alert("❌ Neplatná IPv6 next hop adresa!");
+      return;
+    }
+
+    const newRoutes = [
+      ...(selectedNode.data.ipv6RoutingTable || []),
+      {
+        network: ipv6RouteNetwork,
+        prefixLength: parseInt(ipv6RoutePrefixLength),
+        nextHop: ipv6RouteNextHop,
+        metric: parseInt(ipv6RouteMetric) || 1,
+        protocol: "static" as const,
+        adminDistance: 1,
+      },
+    ];
+
+    updateNode(selectedNode.id, { ipv6RoutingTable: newRoutes });
+    setIpv6RouteNetwork("");
+    setIpv6RoutePrefixLength("64");
+    setIpv6RouteNextHop("");
+    setIpv6RouteMetric("1");
+    setShowAddIpv6Route(false);
+  };
+
+  const handleDeleteIpv6Route = (index: number) => {
+    const newRoutes = (selectedNode.data.ipv6RoutingTable || []).filter(
+      (_, i) => i !== index
+    );
+    updateNode(selectedNode.id, { ipv6RoutingTable: newRoutes });
+  };
+
   const handleAddDhcpPool = () => {
     if (!dhcpName || !dhcpNetwork || !dhcpMask) {
       alert("Vyplň povinná pole (Name, Network, Mask)!");
@@ -239,6 +361,61 @@ export default function PropertiesPanel() {
     updateNode(selectedNode.id, {
       dhcpPools: newPools,
       isDhcpServer: newPools.length > 0,
+    });
+  };
+
+  // DHCPv6 handlers
+  const handleAddDhcpv6Pool = () => {
+    if (!dhcpv6Name || !dhcpv6Prefix) {
+      alert("Vyplň povinná pole (Name, IPv6 Prefix)!");
+      return;
+    }
+
+    // Validace IPv6 prefixu
+    if (!validateIPv6(dhcpv6Prefix)) {
+      alert("❌ Neplatný IPv6 prefix! Použij formát: 2001:db8:1234::");
+      return;
+    }
+
+    if (!validatePrefixLength(dhcpv6PrefixLength)) {
+      alert("❌ Neplatný prefix length! Musí být číslo mezi 1-128");
+      return;
+    }
+
+    if (dhcpv6DnsServer && !validateIPv6(dhcpv6DnsServer)) {
+      alert("❌ Neplatná IPv6 DNS adresa!");
+      return;
+    }
+
+    const newPools = [
+      ...(selectedNode.data.dhcpv6Pools || []),
+      {
+        name: dhcpv6Name,
+        prefix: dhcpv6Prefix,
+        prefixLength: parseInt(dhcpv6PrefixLength),
+        dnsServer: dhcpv6DnsServer,
+        leaseTime: 86400, // 24 hours
+      },
+    ];
+
+    updateNode(selectedNode.id, {
+      dhcpv6Pools: newPools,
+      isDhcpv6Server: true,
+    });
+    setDhcpv6Name("");
+    setDhcpv6Prefix("");
+    setDhcpv6PrefixLength("64");
+    setDhcpv6DnsServer("");
+    setShowAddDhcpv6(false);
+  };
+
+  const handleDeleteDhcpv6Pool = (index: number) => {
+    const newPools = (selectedNode.data.dhcpv6Pools || []).filter(
+      (_, i) => i !== index
+    );
+    updateNode(selectedNode.id, {
+      dhcpv6Pools: newPools,
+      isDhcpv6Server: newPools.length > 0,
     });
   };
 
@@ -1766,6 +1943,214 @@ export default function PropertiesPanel() {
         </div>
       )}
 
+      {/* IPv6 Routing Table - pouze pro routery */}
+      {selectedNode.data.type === "router" && (
+        <div style={{ marginTop: "14px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#1e293b",
+                letterSpacing: "0.3px",
+              }}
+            >
+              🗺️ IPv6 ROUTING TABLE
+            </h3>
+            <button
+              onClick={() => setShowAddIpv6Route(!showAddIpv6Route)}
+              style={{
+                padding: "3px 8px",
+                background: "#0ea5e9",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                fontSize: "9px",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              {showAddIpv6Route ? "✖️" : "➕ Add Route"}
+            </button>
+          </div>
+
+          {showAddIpv6Route && (
+            <div
+              style={{
+                background: "#f1f5f9",
+                padding: "10px",
+                borderRadius: "6px",
+                marginBottom: "8px",
+                border: "1px solid #cbd5e1",
+              }}
+            >
+              <input
+                type="text"
+                placeholder="IPv6 Network (2001:db8:10::)"
+                value={ipv6RouteNetwork}
+                onChange={(e) => setIpv6RouteNetwork(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Prefix Length (64)"
+                value={ipv6RoutePrefixLength}
+                onChange={(e) => setIpv6RoutePrefixLength(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Next Hop (2001:db8:ffff::2)"
+                value={ipv6RouteNextHop}
+                onChange={(e) => setIpv6RouteNextHop(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Metric (1)"
+                value={ipv6RouteMetric}
+                onChange={(e) => setIpv6RouteMetric(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "8px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <button
+                onClick={handleAddIpv6Route}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  background: "#0ea5e9",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                }}
+              >
+                💾 Save IPv6 Route
+              </button>
+            </div>
+          )}
+
+          <div
+            style={{
+              maxHeight: "150px",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+            }}
+          >
+            {(selectedNode.data.ipv6RoutingTable || []).length === 0 ? (
+              <div
+                style={{
+                  padding: "10px",
+                  background: "#f8fafc",
+                  borderRadius: "6px",
+                  textAlign: "center",
+                  color: "#94a3b8",
+                  fontSize: "9px",
+                  fontStyle: "italic",
+                }}
+              >
+                Žádné IPv6 routy
+              </div>
+            ) : (
+              (selectedNode.data.ipv6RoutingTable || []).map((route, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: "8px",
+                    background: "white",
+                    borderRadius: "6px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: "600",
+                        color: "#1e293b",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {route.network}/{route.prefixLength}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteIpv6Route(index)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#dc2626",
+                        cursor: "pointer",
+                        fontSize: "10px",
+                        padding: "0",
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                  <div style={{ fontSize: "8px", color: "#64748b" }}>
+                    via {route.nextHop}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "7px",
+                      color: "#94a3b8",
+                      marginTop: "2px",
+                    }}
+                  >
+                    {route.protocol} [metric: {route.metric || 1}]
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       {/* DHCP Server - pro routery a servery */}
       {(selectedNode.data.type === "router" ||
         selectedNode.data.type === "server") && (
@@ -2036,6 +2421,252 @@ export default function PropertiesPanel() {
                         Gateway: {pool.defaultRouter}
                       </div>
                     )}
+                    {pool.dnsServer && (
+                      <div style={{ fontSize: "7px", color: "#94a3b8" }}>
+                        DNS: {pool.dnsServer}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DHCPv6 Server - pro routery a servery */}
+      {(selectedNode.data.type === "router" ||
+        selectedNode.data.type === "server") && (
+        <div style={{ marginTop: "14px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#1e293b",
+                letterSpacing: "0.3px",
+              }}
+            >
+              🌐 DHCPv6 SERVER
+            </h3>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  fontSize: "9px",
+                  color: "#64748b",
+                  gap: "6px",
+                }}
+              >
+                <span>{selectedNode.data.isDhcpv6Server ? "ON" : "OFF"}</span>
+                <div
+                  onClick={() => {
+                    updateNode(selectedNode.id, {
+                      isDhcpv6Server: !selectedNode.data.isDhcpv6Server,
+                    });
+                  }}
+                  style={{
+                    width: "36px",
+                    height: "18px",
+                    background: selectedNode.data.isDhcpv6Server
+                      ? "#0ea5e9"
+                      : "#cbd5e1",
+                    borderRadius: "9px",
+                    position: "relative",
+                    transition: "background 0.3s",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "14px",
+                      height: "14px",
+                      background: "white",
+                      borderRadius: "50%",
+                      position: "absolute",
+                      top: "2px",
+                      left: selectedNode.data.isDhcpv6Server ? "20px" : "2px",
+                      transition: "left 0.3s",
+                    }}
+                  />
+                </div>
+              </label>
+              {selectedNode.data.isDhcpv6Server && (
+                <button
+                  onClick={() => setShowAddDhcpv6(!showAddDhcpv6)}
+                  style={{
+                    padding: "3px 8px",
+                    background: "#0ea5e9",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "9px",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                  }}
+                >
+                  {showAddDhcpv6 ? "✖️" : "➕ Add Pool"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {selectedNode.data.isDhcpv6Server && showAddDhcpv6 && (
+            <div
+              style={{
+                background: "#f1f5f9",
+                padding: "10px",
+                borderRadius: "6px",
+                marginBottom: "8px",
+                border: "1px solid #cbd5e1",
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Pool Name (VLAN10_IPv6)"
+                value={dhcpv6Name}
+                onChange={(e) => setDhcpv6Name(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="IPv6 Prefix (2001:db8:10::)"
+                value={dhcpv6Prefix}
+                onChange={(e) => setDhcpv6Prefix(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Prefix Length (64)"
+                value={dhcpv6PrefixLength}
+                onChange={(e) => setDhcpv6PrefixLength(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "6px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="DNS Server (optional, 2001:db8::53)"
+                value={dhcpv6DnsServer}
+                onChange={(e) => setDhcpv6DnsServer(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  marginBottom: "8px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                }}
+              />
+              <button
+                onClick={handleAddDhcpv6Pool}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  background: "#0ea5e9",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "9px",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                }}
+              >
+                💾 Save DHCPv6 Pool
+              </button>
+            </div>
+          )}
+
+          {selectedNode.data.isDhcpv6Server && (
+            <div
+              style={{
+                maxHeight: "150px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+              }}
+            >
+              {(selectedNode.data.dhcpv6Pools || []).length === 0 ? (
+                <div
+                  style={{
+                    padding: "10px",
+                    background: "#f8fafc",
+                    borderRadius: "6px",
+                    textAlign: "center",
+                    color: "#94a3b8",
+                    fontSize: "9px",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Žádné DHCPv6 pooly
+                </div>
+              ) : (
+                (selectedNode.data.dhcpv6Pools || []).map((pool, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "8px",
+                      background: "white",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      <div style={{ fontSize: "9px", fontWeight: "600" }}>
+                        {pool.name}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteDhcpv6Pool(index)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#ef4444",
+                          cursor: "pointer",
+                          fontSize: "9px",
+                          padding: "0 4px",
+                        }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                    <div style={{ fontSize: "8px", color: "#64748b" }}>
+                      Prefix: {pool.prefix}/{pool.prefixLength}
+                    </div>
                     {pool.dnsServer && (
                       <div style={{ fontSize: "7px", color: "#94a3b8" }}>
                         DNS: {pool.dnsServer}

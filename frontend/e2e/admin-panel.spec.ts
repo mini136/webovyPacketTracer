@@ -41,11 +41,10 @@ test.describe('Admin Panel - Správa uživatelů', () => {
       await page.waitForTimeout(1000);
       
       // Ověř, že se zobrazuje seznam uživatelů
-      await expect(page.locator('text=admin').or(page.locator('text=Username'))).toBeVisible();
-      
-      // Měla by být vidět tabulka nebo seznam s uživateli
-      await expect(page.locator('text=Email').or(page.locator('text=Role'))).toBeVisible();
-      
+    await expect(page.getByRole('columnheader', { name: 'Username' })).toBeVisible();
+
+    // Měla by být vidět tabulka nebo seznam s uživateli
+    await expect(page.getByRole('columnheader', { name: 'Email' })).toBeVisible();
       console.log('✅ Seznam uživatelů zobrazen');
     }
   });
@@ -78,8 +77,7 @@ test.describe('Admin Panel - Správa uživatelů', () => {
         await page.waitForTimeout(1000);
         
         // Ověř, že se uživatel objevil v seznamu
-        await expect(page.locator(`text=adminuser${timestamp}`)).toBeVisible();
-        
+      await expect(page.getByRole('cell', { name: `adminuser${timestamp}`, exact: true })).toBeVisible();
         console.log('✅ Nový uživatel vytvořen přes admin panel');
       }
     }
@@ -101,10 +99,9 @@ test.describe('Admin Panel - Správa uživatelů', () => {
         await page.waitForTimeout(500);
         
         // Ověř, že jsme zpět v hlavním editoru
-        await expect(page.locator('text=Network Simulator')).toBeVisible();
-        
-        // Admin panel by už neměl být viditelný
-        await expect(page.locator('text=Admin Panel')).not.toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Network Simulator', exact: true })).toBeVisible();
+        // Admin panel heading by už neměl být viditelný
+        await expect(page.getByRole('heading', { name: 'Administrační panel' })).not.toBeVisible();
         
         console.log('✅ Návrat do editoru funguje');
       }

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Autentizace - Registrace a Login', () => {
   
+  // POZOR: Tento test vyžaduje běžící backend (NestJS + MongoDB)
   test('Registrace nového uživatele', async ({ page }) => {
     await page.goto('/');
     
@@ -54,7 +55,7 @@ test.describe('Autentizace - Registrace a Login', () => {
     await expect(page.getByRole('heading', { name: 'Network Simulator', exact: true })).toBeVisible({ timeout: 10000 });
     
     // Ověř, že jsme přihlášeni jako admin
-    await expect(page.locator('text=admin')).toBeVisible();
+    await expect(page.getByText('👤 admin (admin)')).toBeVisible();
     
     console.log('✅ Přihlášení jako admin úspěšné');
   });
@@ -93,8 +94,8 @@ test.describe('Autentizace - Registrace a Login', () => {
     await page.click('text=Zaregistrujte se');
     await expect(page.locator('text=Registrace')).toBeVisible();
     
-    // Přepni zpět na přihlášení
-    await page.click('text=Přihlásit se');
+    // Přepni zpět na přihlášení - text je "Přihlaste se"
+    await page.click('text=Přihlaste se');
     await expect(page.locator('text=Přihlášení')).toBeVisible();
     
     console.log('✅ Přepínání mezi formuláři funguje');

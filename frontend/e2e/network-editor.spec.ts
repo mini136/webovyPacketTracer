@@ -46,10 +46,9 @@ test.describe('Síťový editor - Vytváření a správa sítě', () => {
   });
   
   test('Přidání nového routeru pomocí drag & drop', async ({ page }) => {
-    // Najdi ikonu routeru v sidebaru
-    const routerIcon = page.locator('[draggable="true"]').filter({ hasText: 'Router' }).or(
-      page.locator('div:has-text("Router")').filter({ has: page.locator('[draggable="true"]') })
-    ).first();
+    // Najdi ikonu routeru v sidebaru - zkusíme jednodušší selektor
+    const routerIcon = page.locator('text=Router').first();
+    await expect(routerIcon).toBeVisible();
     
     // Získej pozici canvasu
     const canvas = page.locator('.react-flow').first();
@@ -58,37 +57,57 @@ test.describe('Síťový editor - Vytváření a správa sítě', () => {
     const canvasBox = await canvas.boundingBox();
     if (!canvasBox) throw new Error('Canvas not found');
     
-    // Proveď drag & drop
-    await routerIcon.dragTo(canvas, {
-      targetPosition: { x: canvasBox.width / 2, y: canvasBox.height / 2 }
-    });
+    // Manuální drag & drop sekvence
+    const iconBox = await routerIcon.boundingBox();
+    if (!iconBox) throw new Error('Router icon not found');
+    
+    await page.mouse.move(iconBox.x + iconBox.width / 2, iconBox.y + iconBox.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    await page.mouse.move(canvasBox.x + canvasBox.width / 2, canvasBox.y + canvasBox.height / 2, { steps: 10 });
+    await page.waitForTimeout(100);
+    await page.mouse.up();
     
     await page.waitForTimeout(1000);
     
-    // Ověř, že se na canvasu objevil nový router
+    // Ověř, že se na canvasu objevil nový router (měl by být Router-3, protože už tam jsou 2 z ukázkové sítě)
     await expect(page.locator('text=/Router.*/')).toBeVisible();
     
     console.log('✅ Router úspěšně přidán');
   });
   
   test('Přidání switche a PC do sítě', async ({ page }) => {
-    // Přidej switch
-    const switchIcon = page.locator('[draggable="true"]').filter({ hasText: 'Switch' }).first();
     const canvas = page.locator('.react-flow').first();
+    await expect(canvas).toBeVisible();
+    const canvasBox = await canvas.boundingBox();
+    if (!canvasBox) throw new Error('Canvas not found');
     
-    await switchIcon.dragTo(canvas, {
-      targetPosition: { x: 200, y: 200 }
-    });
+    // Přidej switch - manuální drag & drop
+    const switchIcon = page.locator('text=Switch').first();
+    await expect(switchIcon).toBeVisible();
+    const switchBox = await switchIcon.boundingBox();
+    if (!switchBox) throw new Error('Switch icon not found');
     
+    await page.mouse.move(switchBox.x + switchBox.width / 2, switchBox.y + switchBox.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    await page.mouse.move(canvasBox.x + 200, canvasBox.y + 200, { steps: 10 });
+    await page.waitForTimeout(100);
+    await page.mouse.up();
     await page.waitForTimeout(500);
     
-    // Přidej PC
-    const pcIcon = page.locator('[draggable="true"]').filter({ hasText: 'PC' }).first();
+    // Přidej PC - manuální drag & drop
+    const pcIcon = page.locator('text=PC').first();
+    await expect(pcIcon).toBeVisible();
+    const pcBox = await pcIcon.boundingBox();
+    if (!pcBox) throw new Error('PC icon not found');
     
-    await pcIcon.dragTo(canvas, {
-      targetPosition: { x: 400, y: 300 }
-    });
-    
+    await page.mouse.move(pcBox.x + pcBox.width / 2, pcBox.y + pcBox.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    await page.mouse.move(canvasBox.x + 400, canvasBox.y + 300, { steps: 10 });
+    await page.waitForTimeout(100);
+    await page.mouse.up();
     await page.waitForTimeout(500);
     
     // Ověř, že se na canvasu objevily zařízení

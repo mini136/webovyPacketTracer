@@ -52,7 +52,7 @@ export class AuthService {
 
     // Generate token
     const payload: JwtPayload = {
-      sub: user._id.toString(),
+      sub: (user._id as any).toString(),
       username: user.username,
       email: user.email,
       role: user.role,
@@ -61,7 +61,7 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user._id.toString(),
+        id: (user._id as any).toString(),
         username: user.username,
         email: user.email,
         role: user.role,
