@@ -1,4 +1,10 @@
-import { IsString, IsEnum, IsNumber, IsOptional, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsObject,
+} from 'class-validator';
 import { DeviceType } from '../schemas/device.schema';
 
 export class CreateDeviceDto {

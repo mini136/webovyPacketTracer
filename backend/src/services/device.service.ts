@@ -23,7 +23,10 @@ export class DeviceService {
     return this.deviceModel.findById(id).exec();
   }
 
-  async update(id: string, updateDeviceDto: UpdateDeviceDto): Promise<Device | null> {
+  async update(
+    id: string,
+    updateDeviceDto: UpdateDeviceDto,
+  ): Promise<Device | null> {
     return this.deviceModel
       .findByIdAndUpdate(id, updateDeviceDto, { new: true })
       .exec();

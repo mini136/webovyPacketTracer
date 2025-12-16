@@ -31,7 +31,10 @@ export class TopologyController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateTopologyDto: UpdateTopologyDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateTopologyDto: UpdateTopologyDto,
+  ) {
     return this.topologyService.update(id, updateTopologyDto);
   }
 

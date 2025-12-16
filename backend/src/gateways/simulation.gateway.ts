@@ -37,7 +37,7 @@ export class SimulationGateway {
   handleSendPacket(@MessageBody() packetData: PacketData) {
     // Emit packet animation to all clients in the topology
     this.server.to(packetData.topologyId).emit('packetSent', packetData);
-    
+
     // Here you would implement actual packet routing logic
     // For now, just simulate packet delivery
     setTimeout(() => {
@@ -52,11 +52,16 @@ export class SimulationGateway {
 
   @SubscribeMessage('ping')
   handlePing(
-    @MessageBody() data: { sourceId: string; targetIp: string; topologyId: string },
+    @MessageBody()
+    data: {
+      sourceId: string;
+      targetIp: string;
+      topologyId: string;
+    },
   ) {
     // Simulate ping command
     this.server.to(data.topologyId).emit('pingStarted', data);
-    
+
     // Simulate ICMP echo request/reply
     setTimeout(() => {
       this.server.to(data.topologyId).emit('pingResult', {

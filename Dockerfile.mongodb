@@ -3,5 +3,6 @@ FROM mongo:4.4
 # Expose MongoDB na portu 30111
 EXPOSE 30111
 
-# Spustit MongoDB na vlastním portu
-CMD ["mongod", "--port", "30111"]
+# Spustit MongoDB na vlastním portu a bindnout na všechna rozhraní
+# --bind_ip_all zajistí, že Mongo naslouchá i na 0.0.0.0 (důležité při publish portů)
+CMD ["mongod", "--port", "30111", "--bind_ip_all"]

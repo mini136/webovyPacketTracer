@@ -1,6 +1,13 @@
 import SaveLoadPanel from './SaveLoadPanel';
+import { useAuthStore } from '../store/authStore';
 
-export default function TopBar() {
+interface TopBarProps {
+  onOpenAdmin?: () => void;
+}
+
+export default function TopBar({ onOpenAdmin }: TopBarProps) {
+  const { user, logout } = useAuthStore();
+
   return (
     <div
       style={{
@@ -38,6 +45,56 @@ export default function TopBar() {
       <SaveLoadPanel />
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <span style={{ color: '#cbd5e1', fontSize: '11px', marginRight: '8px' }}>
+          👤 {user?.username} ({user?.role})
+        </span>
+        
+        {user?.role === 'admin' && onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            style={{
+              padding: '6px 12px',
+              background: 'rgba(251, 191, 36, 0.2)',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
+              borderRadius: '4px',
+              color: '#fbbf24',
+              fontSize: '9px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(251, 191, 36, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(251, 191, 36, 0.2)';
+            }}
+          >
+            👑 Admin Panel
+          </button>
+        )}
+
+        <button
+          onClick={logout}
+          style={{
+            padding: '6px 12px',
+            background: 'rgba(239, 68, 68, 0.2)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '4px',
+            color: '#ef4444',
+            fontSize: '9px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+          }}
+        >
+          🚪 Odhlásit
+        </button>
+
         <button
           style={{
             padding: '6px 8px',
