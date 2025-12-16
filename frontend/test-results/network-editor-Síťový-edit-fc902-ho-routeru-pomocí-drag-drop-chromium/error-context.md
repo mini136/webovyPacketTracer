@@ -1,0 +1,84 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 🌐
+      - generic [ref=e7]:
+        - heading "Network Simulator Pro" [level=1] [ref=e8]
+        - paragraph [ref=e9]: Web-based Cisco Packet Tracer
+    - generic [ref=e10]:
+      - textbox "Název topologie" [ref=e11]: Moje síť
+      - button "📂 Načíst" [ref=e12] [cursor=pointer]
+      - button "💾 Uložit" [disabled] [ref=e13]
+    - generic [ref=e14]:
+      - generic [ref=e15]: 👤 admin (admin)
+      - button "👑 Admin Panel" [ref=e16] [cursor=pointer]
+      - button "🚪 Odhlásit" [ref=e17] [cursor=pointer]
+      - button "⚙️" [ref=e18] [cursor=pointer]
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - heading "Network Simulator" [level=1] [ref=e22]
+        - paragraph [ref=e23]: Cisco Packet Tracer clone
+      - generic [ref=e24]:
+        - generic [ref=e25]: ZAŘÍZENÍ V SÍTI
+        - generic [ref=e26]: "0"
+      - heading "📦 Devices" [level=2] [ref=e27]
+      - generic [ref=e28]:
+        - button "⚡ Router Layer 3 routing" [ref=e29] [cursor=pointer]:
+          - generic [ref=e30]: ⚡
+          - generic [ref=e31]:
+            - generic [ref=e32]: Router
+            - generic [ref=e33]: Layer 3 routing
+        - button "� Switch Layer 2 switching" [ref=e34] [cursor=pointer]:
+          - generic [ref=e35]: �
+          - generic [ref=e36]:
+            - generic [ref=e37]: Switch
+            - generic [ref=e38]: Layer 2 switching
+        - button "💻 PC End device" [ref=e39] [cursor=pointer]:
+          - generic [ref=e40]: 💻
+          - generic [ref=e41]:
+            - generic [ref=e42]: PC
+            - generic [ref=e43]: End device
+        - button "🖥️ Server Network server" [ref=e44] [cursor=pointer]:
+          - generic [ref=e45]: 🖥️
+          - generic [ref=e46]:
+            - generic [ref=e47]: Server
+            - generic [ref=e48]: Network server
+        - button "⭐ Hub Basic hub" [ref=e49] [cursor=pointer]:
+          - generic [ref=e50]: ⭐
+          - generic [ref=e51]:
+            - generic [ref=e52]: Hub
+            - generic [ref=e53]: Basic hub
+      - generic [ref=e54]:
+        - heading "🛠️ Tools" [level=3] [ref=e55]
+        - button "⚡ Ukázková Síť" [ref=e56] [cursor=pointer]
+        - button "🔧 Network Tools" [ref=e57] [cursor=pointer]
+        - button "🧮 Subnetting Calc" [ref=e58] [cursor=pointer]
+        - button "💾 Uložit Topologii" [ref=e59] [cursor=pointer]
+        - button "🗑️ Vymazat Vše" [ref=e60] [cursor=pointer]
+    - generic [ref=e63]:
+      - generic [ref=e65]:
+        - generic:
+          - img
+      - img [ref=e66]
+      - generic [ref=e68]:
+        - button "zoom in" [ref=e69] [cursor=pointer]:
+          - img [ref=e70]
+        - button "zoom out" [ref=e72] [cursor=pointer]:
+          - img [ref=e73]
+        - button "fit view" [ref=e75] [cursor=pointer]:
+          - img [ref=e76]
+        - button "toggle interactivity" [ref=e78] [cursor=pointer]:
+          - img [ref=e79]
+      - img "React Flow mini map" [ref=e82]
+      - link "React Flow attribution" [ref=e84] [cursor=pointer]:
+        - /url: https://reactflow.dev
+        - text: React Flow
+    - generic [ref=e87]:
+      - generic [ref=e88]: 🔍
+      - heading "Vlastnosti Zařízení" [level=3] [ref=e89]
+      - paragraph [ref=e90]: Vyber zařízení na canvasu pro zobrazení a úpravu vlastností
+```

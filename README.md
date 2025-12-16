@@ -801,9 +801,133 @@ interface NetworkStore {
 
 ---
 
-## 15. Paralelizace - Shrnutí Pro Školu
+## 15. E2E Automatizované Testování
 
-### 15.1 Splněné Požadavky
+### 15.1 Testovací Framework
+
+Projekt používá **Playwright** pro automatizované end-to-end testování webové aplikace.
+
+**Pokrytí testů:**
+- ✅ **Autentizace** - Registrace, login, logout (auth.spec.ts)
+- ✅ **Síťový editor** - Vytváření topologie, drag & drop (network-editor.spec.ts)
+- ✅ **CLI Terminal** - Příkazy, konfigurace, IPv6 (cli-terminal.spec.ts)
+- ✅ **Admin Panel** - Správa uživatelů (admin-panel.spec.ts)
+
+### 15.2 Spuštění Testů
+
+```powershell
+# Instalace Playwright browsers (jednorázově)
+cd frontend
+npx playwright install chromium
+
+# Spuštění testů
+npm test                # Headless mode
+npm run test:ui         # Interaktivní UI
+npm run test:headed     # S viditelným prohlížečem
+npm run test:debug      # Debug mode
+
+# Spuštění konkrétního testu
+npm test auth.spec.ts
+```
+
+### 15.3 Testované Scénáře
+
+**Auth Tests:**
+```typescript
+✅ Registrace nového uživatele s unikátním emailem
+✅ Přihlášení s výchozím admin účtem (admin/admin123)
+✅ Neúspěšné přihlášení se špatnými údaji
+✅ Přepínání mezi formuláři přihlášení/registrace
+```
+
+**Network Editor Tests:**
+```typescript
+✅ Vytvoření ukázkové sítě (2 routery, 2 switche, 4 PC, VLANy)
+✅ Přidání routeru pomocí drag & drop
+✅ Přidání switche a PC do sítě
+✅ Otevření Properties Panel na zařízení
+✅ Uložení a načtení topologie
+```
+
+**CLI Terminal Tests:**
+```typescript
+✅ Otevření CLI terminálu na routeru (dvojklik)
+✅ Základní show příkazy (show version, show ip interface brief)
+✅ IPv6 příkazy (show ipv6 interface brief, show ipv6 route)
+✅ Konfigurace routeru (enable, configure terminal, hostname)
+✅ Konfigurace IPv6 na interfacu (ipv6 address, ipv6 unicast-routing)
+✅ Help příkaz zobrazuje dostupné příkazy
+✅ Zavření CLI terminálu
+```
+
+**Admin Panel Tests:**
+```typescript
+✅ Otevření admin panelu
+✅ Zobrazení seznamu uživatelů
+✅ Vytvoření nového uživatele
+✅ Návrat z admin panelu do editoru
+✅ Filtrování a hledání uživatelů
+✅ Odhlášení
+```
+
+### 15.4 Test Helpers
+
+Projekt obsahuje helper funkce pro usnadnění psaní testů:
+
+```typescript
+// e2e/helpers.ts
+import { loginAsAdmin, createSampleNetwork, openCLI, executeCLICommand } from './helpers';
+
+// Použití:
+await loginAsAdmin(page);
+await createSampleNetwork(page);
+const cliInput = await openCLI(page, 'Router-1');
+await executeCLICommand(cliInput, 'show ipv6 route');
+```
+
+### 15.5 Výstupy Testů
+
+Po spuštění testů jsou generovány:
+- **HTML report** (`playwright-report/index.html`)
+- **Screenshots** (pouze při selhání)
+- **Videa** (pouze při selhání)
+- **Traces** (pro debug)
+
+Zobrazení reportu:
+```powershell
+npm run test:report
+```
+
+### 15.6 CI/CD Integrace
+
+Testy jsou připraveny pro CI/CD pipeline:
+
+```yaml
+# .github/workflows/test.yml
+- name: Install dependencies
+  run: npm ci
+  working-directory: frontend
+
+- name: Install Playwright
+  run: npx playwright install --with-deps
+  working-directory: frontend
+
+- name: Run tests
+  run: npm test
+  working-directory: frontend
+  env:
+    CI: true
+```
+
+### 15.7 Dokumentace
+
+Detailní dokumentace testů v: `frontend/e2e/README.md`
+
+---
+
+## 16. Paralelizace - Shrnutí Pro Školu
+
+### 16.1 Splněné Požadavky
 
 ✅ **Reálný problém**: Síťová simulace s konkurentním zpracováním paketů  
 ✅ **Paralelní procesy**: 4-8 workerů současně zpracovává pakety  
@@ -813,7 +937,7 @@ interface NetworkStore {
 ✅ **Synchronizace**: Lock/unlock na shared resources  
 ✅ **Konflikty o zdroje**: Routing table, MAC table, IP pool
 
-### 15.2 Známé Problémy (Implementované)
+### 16.2 Známé Problémy (Implementované)
 
 1. **Producer-Consumer** (PacketProcessor.ts)
 2. **Deadlock prevention** (BroadcastStormPrevention.ts)
@@ -821,7 +945,7 @@ interface NetworkStore {
 4. **Resource contention** (PacketProcessor.ts)
 5. **Starvation prevention** (DHCPServer.ts - FIFO queue)
 
-### 15.3 Není Triviální Simulace
+### 16.3 Není Triviální Simulace
 
 - ✅ Skutečné paralelní zpracování (async/await s Promise.all)
 - ✅ Mutex chrání shared state
