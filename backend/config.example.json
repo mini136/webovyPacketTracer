@@ -1,0 +1,21 @@
+{
+  "server": {
+    "port": 3000,
+    "corsOrigin": "http://localhost:5173"
+  },
+  "mongo": {
+    "uri": "mongodb://localhost:27017/network-simulator"
+  },
+  "jwt": {
+    "secret": "CHANGE_ME"
+  },
+  "mssql": {
+    "server": "YOUR_MSSQL_HOST",
+    "port": 1433,
+    "user": "YOUR_USER",
+    "password": "YOUR_PASSWORD",
+    "database": "webovy_packet_tracer",
+    "encrypt": true,
+    "trustServerCertificate": false
+  }
+}
