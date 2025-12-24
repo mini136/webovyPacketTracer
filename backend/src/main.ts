@@ -2,13 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AuthService } from './services/auth.service';
+import { loadAppConfig } from './config/app-config';
 
 async function bootstrap() {
+  const cfg = loadAppConfig();
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS for frontend
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: cfg.server.corsOrigin,
     credentials: true,
   });
 
@@ -19,7 +21,7 @@ async function bootstrap() {
   const authService = app.get(AuthService);
   await authService.createInitialAdmin();
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(cfg.server.port);
   console.log('🚀 Backend running on http://localhost:3000');
 }
 bootstrap();
