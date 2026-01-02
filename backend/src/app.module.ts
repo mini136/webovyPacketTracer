@@ -20,10 +20,24 @@ import { Topology, TopologySchema } from './schemas/topology.schema';
 import { Device, DeviceSchema } from './schemas/device.schema';
 import { Connection, ConnectionSchema } from './schemas/connection.schema';
 import { User, UserSchema } from './schemas/user.schema';
+import { APP_CONFIG, loadAppConfig } from './config/app-config';
+import { LabsModule } from './relational/labs/labs.module';
+
+const cfg = loadAppConfig();
+const enableMssql =
+  (process.env.ENABLE_MSSQL ?? '') === 'true' ||
+  (cfg.mssql.server !== '' &&
+    cfg.mssql.user !== '' &&
+    cfg.mssql.database !== '');
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://46.13.167.200:30469/network-simulator'),
+    MongooseModule.forRootAsync({
+      inject: [APP_CONFIG],
+      useFactory: (cfg: ReturnType<typeof loadAppConfig>) => ({
+        uri: cfg.mongo.uri,
+      }),
+    }),
     MongooseModule.forFeature([
       { name: Topology.name, schema: TopologySchema },
       { name: Device.name, schema: DeviceSchema },
@@ -31,10 +45,14 @@ import { User, UserSchema } from './schemas/user.schema';
       { name: User.name, schema: UserSchema },
     ]),
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key-change-this',
-      signOptions: { expiresIn: '7d' },
+    JwtModule.registerAsync({
+      inject: [APP_CONFIG],
+      useFactory: (cfg: ReturnType<typeof loadAppConfig>) => ({
+        secret: cfg.jwt.secret,
+        signOptions: { expiresIn: '7d' },
+      }),
     }),
+    ...(enableMssql ? [LabsModule] : []),
   ],
   controllers: [
     AppController,
@@ -45,6 +63,10 @@ import { User, UserSchema } from './schemas/user.schema';
     UserController,
   ],
   providers: [
+    {
+      provide: APP_CONFIG,
+      useFactory: loadAppConfig,
+    },
     AppService,
     TopologyService,
     DeviceService,
