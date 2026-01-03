@@ -22,6 +22,7 @@ import { Connection, ConnectionSchema } from './schemas/connection.schema';
 import { User, UserSchema } from './schemas/user.schema';
 import { APP_CONFIG, loadAppConfig } from './config/app-config';
 import { LabsModule } from './relational/labs/labs.module';
+import { ImportsModule } from './relational/imports/imports.module';
 
 const cfg = loadAppConfig();
 const enableMssql =
@@ -52,7 +53,7 @@ const enableMssql =
         signOptions: { expiresIn: '7d' },
       }),
     }),
-    ...(enableMssql ? [LabsModule] : []),
+    ...(enableMssql ? [LabsModule, ImportsModule] : []),
   ],
   controllers: [
     AppController,
