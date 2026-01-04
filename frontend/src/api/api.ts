@@ -2,6 +2,17 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000';
 
+function readAuthToken(): string | null {
+  try {
+    const raw = localStorage.getItem('auth-storage');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
+    return parsed.state?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 type TopologyData = {
   name: string;
   userId: string;
@@ -37,6 +48,15 @@ export const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  const token = readAuthToken();
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Topology API
 export const topologyApi = {
   getAll: (userId: string) => api.get(`/topologies?userId=${userId}`),
@@ -60,4 +80,19 @@ export const connectionApi = {
   getByTopology: (topologyId: string) => api.get(`/connections?topologyId=${topologyId}`),
   create: (data: ConnectionData) => api.post('/connections', data),
   delete: (id: string) => api.delete(`/connections/${id}`),
+};
+
+// Labs API (MSSQL-backed)
+type CreateLabData = {
+  name: string;
+  description?: string;
+  isPublic?: boolean;
+};
+
+export const labsApi = {
+  list: () => api.get('/labs'),
+  create: (data: CreateLabData) => api.post('/labs', data),
+  update: (id: string, data: Partial<CreateLabData>) => api.put(`/labs/${id}`, data),
+  delete: (id: string) => api.delete(`/labs/${id}`),
+  attachTopology: (id: string) => api.post(`/labs/${id}/attach-topology`),
 };

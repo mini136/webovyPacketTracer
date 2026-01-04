@@ -6,11 +6,13 @@ import TopBar from "./components/TopBar";
 import NetworkTools from "./components/NetworkTools";
 import { AuthModal } from "./components/AuthModal";
 import { AdminPanel } from "./components/AdminPanel";
+import LabsPanel from "./components/LabsPanel";
 import { useAuthStore } from "./store/authStore";
 
 function App() {
   const [isNetworkToolsOpen, setIsNetworkToolsOpen] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showLabsPanel, setShowLabsPanel] = useState(false);
   const { isAuthenticated, user } = useAuthStore();
 
   if (!isAuthenticated) {
@@ -31,7 +33,11 @@ function App() {
         overflow: "hidden",
       }}
     >
-      <TopBar onOpenAdmin={() => setShowAdminPanel(true)} />
+      <TopBar
+        onOpenAdmin={() => setShowAdminPanel(true)}
+        onOpenLabs={() => setShowLabsPanel(true)}
+      />
+      {showLabsPanel && <LabsPanel onClose={() => setShowLabsPanel(false)} />}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <Sidebar onOpenNetworkTools={() => setIsNetworkToolsOpen(true)} />
         <div
