@@ -8,6 +8,29 @@
 
 ---
 
+## D1 (MSSQL) – Laboratoře / Projekty
+
+Tento repozitář obsahuje samostatný modul splňující zadání D1 (Repository pattern) nad MSSQL.
+
+- MongoDB: ukládá data pro editor topologie a simulaci.
+- MSSQL: ukládá evidenci „Laboratoří/Projektů“, povolené modely zařízení (M:N), reporty a importy.
+
+### Rychlé nastavení (bez IDE)
+
+1) MSSQL: vytvoř databázi (např. `webovy_packet_tracer`) a spusť skripty:
+- database/mssql/schema.sql
+- database/mssql/views.sql
+- (volitelné) database/mssql/seed.sql
+
+2) Backend konfigurace:
+- zkopíruj `backend/config.example.json` → `backend/config.json` a doplň MSSQL připojení
+
+3) Zapnutí MSSQL modulu:
+- nastav `ENABLE_MSSQL=true`, nebo vyplň `mssql.*` v `backend/config.json`
+
+4) UI:
+- po přihlášení se v horní liště zobrazí tlačítko „Laboratoře“
+
 ## 1. Uživatelské Požadavky
 
 Tento projekt implementuje webovou verzi síťového simulátoru typu Cisco Packet Tracer. Umožňuje:
