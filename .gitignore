@@ -7,3 +7,15 @@ dist/
 *.log
 .vscode/
 .idea/
+
+# Playwright and test artifacts
+/playwright-report/
+/test-results/
+**/playwright-report/
+**/test-results/
+frontend/playwright-report/
+frontend/test-results/
+*.mp4
+*.webm
+playwright-report/**
+reports/
