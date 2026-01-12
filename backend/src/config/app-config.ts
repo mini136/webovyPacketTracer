@@ -46,7 +46,7 @@ export function loadAppConfig(): AppConfig {
     fs.existsSync(configPath)
       ? (readJsonFile(configPath) as Partial<AppConfig>)
       : {}
-  ) as Partial<AppConfig>;
+  );
 
   const port = Number(process.env.PORT ?? fileConfig.server?.port ?? 3000);
   const corsOrigin =

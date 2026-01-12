@@ -34,9 +34,9 @@ const enableMssql =
 @Module({
   imports: [
     MongooseModule.forRootAsync({
-      inject: [APP_CONFIG],
-      useFactory: (cfg: ReturnType<typeof loadAppConfig>) => ({
-        uri: cfg.mongo.uri,
+      // loadAppConfig() is synchronous and available here; avoid injecting APP_CONFIG
+      useFactory: () => ({
+        uri: loadAppConfig().mongo.uri,
       }),
     }),
     MongooseModule.forFeature([
@@ -47,9 +47,9 @@ const enableMssql =
     ]),
     PassportModule,
     JwtModule.registerAsync({
-      inject: [APP_CONFIG],
-      useFactory: (cfg: ReturnType<typeof loadAppConfig>) => ({
-        secret: cfg.jwt.secret,
+      // similarly, read config directly to avoid ordering issues with APP_CONFIG provider
+      useFactory: () => ({
+        secret: loadAppConfig().jwt.secret,
         signOptions: { expiresIn: '7d' },
       }),
     }),
