@@ -65,7 +65,7 @@ export class LabsRepository {
       .input('ownerMongoUserId', ownerMongoUserId).query<LabSummaryRow>(`
         SELECT *
         FROM dbo.vw_LabSummary
-        WHERE OwnerMongoUserId = @ownerMongoUserId
+        WHERE OwnerMongoUserId = @ownerMongoUserId OR IsPublic = 1
         ORDER BY CreatedAt DESC
       `);
 

@@ -33,15 +33,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   useEffect(() => {
     if (user?.role === "admin") {
+      if (!token) {
+        setError("Chybí autorizace. Přihlaste se znovu.");
+        return;
+      }
       loadUsers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, token]);
 
   const loadUsers = async () => {
     setIsLoading(true);
     setError(null);
     try {
+      if (!token) {
+        throw new Error("Chybí autorizace (token).");
+      }
       const response = await fetch(`${API_URL}/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -49,6 +56,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Neautorizovaný přístup (401). Přihlaste se prosím.");
+        }
         throw new Error("Failed to load users");
       }
 
