@@ -1,11 +1,16 @@
 {
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run start:dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "prepare": "husky install",
+    "test": "npm -C backend test",
+    "test:backend": "npm -C backend test",
+    "test:frontend": "npm -C frontend test"
   }
 }

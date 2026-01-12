@@ -2,3 +2,9 @@
 . "$(dirname "$0")/_/husky.sh"
 
 npm run test
+
+# Frontend E2E (Playwright) needs running backend + MongoDB.
+# Run only when backend is reachable on localhost:3000 to avoid failing every commit.
+node -e "const net=require('net');const s=net.connect(3000,'127.0.0.1');s.on('connect',()=>process.exit(0));s.on('error',()=>process.exit(1));" \
+	&& npm run test:frontend \
+	|| echo "Skipping frontend e2e (backend not running on http://localhost:3000)."

@@ -31,6 +31,14 @@ Tento repozitář obsahuje samostatný modul splňující zadání D1 (Repositor
 4) UI:
 - po přihlášení se v horní liště zobrazí tlačítko „Laboratoře“
 
+### Testy po každém commitu (Git hook)
+
+- Po každém `git commit` se automaticky spustí backend unit testy (`jest`).
+- Frontend E2E testy (Playwright) se spustí jen pokud běží backend na `http://localhost:3000` (jinak se přeskočí).
+- Zapnutí: stačí jednou spustit `npm install` v rootu repozitáře (Husky nastaví Git hooky přes `core.hooksPath`).
+- Manuální spuštění stejné sady testů: `npm run test` v rootu.
+- Manuální spuštění frontend E2E: `npm run test:frontend` (vyžaduje backend + MongoDB, viz `frontend/e2e/README.md`).
+
 ## 1. Uživatelské Požadavky
 
 Tento projekt implementuje webovou verzi síťového simulátoru typu Cisco Packet Tracer. Umožňuje:

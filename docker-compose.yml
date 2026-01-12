@@ -21,7 +21,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - MONGODB_URI=mongodb://mongodb:30111/network-simulator
+      - MONGO_URI=mongodb://mongodb:30111/network-simulator
       - PORT=3000
     depends_on:
       - mongodb
